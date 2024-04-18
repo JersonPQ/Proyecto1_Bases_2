@@ -24,28 +24,7 @@ class PostgreDatabase:
 
         return data
     
-        #Obtener encuestados
-    def get_all_respondents(self):
-        cursor = self.conn.cursor()
-        query = "SELECT id, name, email FROM respondents;"
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        cursor.close()
-        return [{"id": row[0], "name": row[1], "email": row[2]} for row in rows]
-    
-        #Método para Obtener un Encuestado Específico por ID
-    def get_respondent_by_id(self, respondent_id):
-        cursor = self.conn.cursor()
-        query = "SELECT id, name, email FROM respondents WHERE id = %s;"
-        cursor.execute(query, (respondent_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        if row:
-            return {"id": row[0], "name": row[1], "email": row[2]}
-        else:
-            return None
-
-
+ 
 
     # ----------------- Inserciones ----------------- #
     
@@ -62,6 +41,11 @@ class PostgreDatabase:
 
         return user
 
+
+
+# ------------------ MÉTODOS ENCUESTADOS --------------
+
+
     #Insertar encuestado
     def insert_respondent(self, respondent_data):
         cursor = self.conn.cursor()
@@ -71,9 +55,29 @@ class PostgreDatabase:
         self.conn.commit()
         cursor.close()
         return {"id": respondent_id, "name": respondent_data['name'], "email": respondent_data['email']}
+    
+    #Obtener encuestados
+    def get_all_respondents(self):
+        cursor = self.conn.cursor()
+        query = "SELECT id, name, email FROM respondents;"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
+        return [{"id": row[0], "name": row[1], "email": row[2]} for row in rows]
+
+        #Método para Obtener un Encuestado Específico por ID
+    def get_respondent_by_id(self, respondent_id):
+        cursor = self.conn.cursor()
+        query = "SELECT id, name, email FROM respondents WHERE id = %s;"
+        cursor.execute(query, (respondent_id,))
+        row = cursor.fetchone()
+        cursor.close()
+        if row:
+            return {"id": row[0], "name": row[1], "email": row[2]}
+        else:
+            return None
 
     #def ACtualizar info de encuesado
-
     def update_respondent(self, respondent_id, data):
         cursor = self.conn.cursor()
         query = "UPDATE respondents SET name = %s, email = %s WHERE id = %s RETURNING id;"
@@ -93,3 +97,6 @@ class PostgreDatabase:
         cursor.close()
         return deleted_rows > 0
 
+  
+    
+    

@@ -4,6 +4,7 @@ class PostgreDatabaseService:
     def __init__(self, database: PostgreDatabase) -> None:
         self.database = database
 
+    # ---------------Encuestados (Respondents)--------------------
     def insert_respondent(self, respondent_data):
         return self.database.insert_respondent(respondent_data)
 

@@ -114,12 +114,10 @@ def postResponse():
 def getResponses():
     None
 
-#Endpoints para los encuestados [Decidir - Preguntar algo al profe]
 
+#Endpoints para los encuestados 
 
-
-
-#• POST /respondents - Registra un nuevo encuestado.
+#POST /respondents - Registra un nuevo encuestado.
 
 @app.route('/respondents', methods=['POST'])
 #implementar lo de seguridad con token
@@ -135,9 +133,7 @@ def register_respondent():
         return jsonify({'error': str(e)}), 500
 
 
-
-
-
+#GET /respondents - Obtiene todos los encuestados
 @app.route('/respondents', methods=['GET'])
 #@token_required
 def list_respondents():
@@ -145,10 +141,7 @@ def list_respondents():
     return jsonify(respondents), 200
 
 
-
-
-
-
+#GET /respondents/{id} - Obtiene el encuestado según el id
 @app.route('/respondents/<int:id>', methods=['GET'])
 #@token_required
 def get_respondent(id):
@@ -159,8 +152,7 @@ def get_respondent(id):
         return jsonify({"error": "Respondent not found"}), 404
 
 
-
-
+# PUT /respondents/{id} - Actualiza la información de un encuestado 
 @app.route('/respondents/<int:id>', methods=['PUT'])
 #@token_required
 def update_respondent(id):
@@ -171,6 +163,8 @@ def update_respondent(id):
     else:
         return jsonify({"error": "Unable to update respondent"}), 404
 
+
+# DELETE /respondents/{id} - Elimina un encuestado de la base de datos
 @app.route('/respondents/<int:id>', methods=['DELETE'])
 #@token_required
 def delete_respondent(id):
