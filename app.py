@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, jsonify
 
 from db_postgre import PostgreDatabase
 from db_postgre_service import PostgreDatabaseService
@@ -115,25 +115,50 @@ def getResponses():
     None
 
 #Endpoints para los encuestados [Decidir - Preguntar algo al profe]
-@app.route('/respondents', methods = ['POST'])
-def postRespondent():
-    None
+@app.route('/respondents', methods=['POST'])
+#@token_required  # Asumimos que tienes un decorador que maneja la verificación del token
+def register_respondent():
+    data = request.json
+    # Asume que data contiene al menos 'nombre' y otros campos necesarios
+    result = postgre_db_service.insert_respondent(data)
+    return jsonify(result), 201
 
-@app.route('/respondents')
-def getRespondents():
-    None
+@app.route('/respondents', methods=['GET'])
+#@token_required
+def list_respondents():
+    respondents = postgre_db_service.get_all_respondents()
+    return jsonify(respondents), 200
 
-@app.route('/respondents/<int:id>')
-def getDetailsRespondent():
-    None
 
-@app.route('/respondents/<int:id>', methods = ['PUT'])
-def putDetailsRespondent():
-    None
+@app.route('/respondents/<int:id>', methods=['GET'])
+#@token_required
+def get_respondent(id):
+    respondent = postgre_db_service.get_respondent_by_id(id)
+    if respondent:
+        return jsonify(respondent), 200
+    else:
+        return jsonify({"error": "Respondent not found"}), 404
 
-@app.route('/respondents/<int:id>', methods = ['DELETE'])
-def deleteRespondent():
-    None
+
+@app.route('/respondents/<int:id>', methods=['PUT'])
+#@token_required
+def update_respondent(id):
+    data = request.json
+    updated_respondent = postgre_db_service.update_respondent(id, data)
+    if updated_respondent:
+        return jsonify(updated_respondent), 200
+    else:
+        return jsonify({"error": "Unable to update respondent"}), 404
+
+@app.route('/respondents/<int:id>', methods=['DELETE'])
+#@token_required
+def delete_respondent(id):
+    result = postgre_db_service.delete_respondent(id)
+    if result:
+        return '', 204
+    else:
+        return jsonify({"error": "Respondent not found"}), 404
+
 
 #Endpoint para los Reportes y Análisis [Dario - Preguntar acerca del analisis al profe]
 @app.route('/surveys/<int:id>/analysis')
