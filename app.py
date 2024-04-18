@@ -49,8 +49,11 @@ def insertar_user():
 #Endpoints para autenticación
 @app.route('/auth/register', methods = ['POST'])
 def register():
-    None
+    user = request.json
+    data = postgre_db_service.insertar_user(user)
+    return data
 
+#Aqui se tiene que crear el Token y guardarlo en la cookie
 @app.route('/auth/login', methods = ['POST'])
 def login():
     None
