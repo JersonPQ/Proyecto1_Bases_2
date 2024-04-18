@@ -30,7 +30,6 @@ services:
       - mongo
       # - redis
 
-
     volumes:
       - .:/opt/app
 

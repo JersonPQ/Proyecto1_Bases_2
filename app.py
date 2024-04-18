@@ -115,19 +115,38 @@ def getResponses():
     None
 
 #Endpoints para los encuestados [Decidir - Preguntar algo al profe]
+
+
+
+
+#• POST /respondents - Registra un nuevo encuestado.
+
 @app.route('/respondents', methods=['POST'])
-#@token_required  # Asumimos que tienes un decorador que maneja la verificación del token
+#implementar lo de seguridad con token
 def register_respondent():
-    data = request.json
-    # Asume que data contiene al menos 'nombre' y otros campos necesarios
-    result = postgre_db_service.insert_respondent(data)
-    return jsonify(result), 201
+    respondent_data = request.get_json()
+    if not respondent_data or 'name' not in respondent_data or 'email' not in respondent_data:
+        return jsonify({'error': 'Missing name or email'}), 400
+    
+    try:
+        result = postgre_db_service.insert_respondent(respondent_data)
+        return jsonify(result), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+
 
 @app.route('/respondents', methods=['GET'])
 #@token_required
 def list_respondents():
     respondents = postgre_db_service.get_all_respondents()
     return jsonify(respondents), 200
+
+
+
+
 
 
 @app.route('/respondents/<int:id>', methods=['GET'])
@@ -138,6 +157,8 @@ def get_respondent(id):
         return jsonify(respondent), 200
     else:
         return jsonify({"error": "Respondent not found"}), 404
+
+
 
 
 @app.route('/respondents/<int:id>', methods=['PUT'])
