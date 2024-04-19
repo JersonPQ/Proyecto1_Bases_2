@@ -77,55 +77,76 @@ def deleteUser():
     None
 
 #Enpoints para Encuestas [Anthony]
+#Autenticacion
 @app.route('/surveys', methods = ['POST'])
-def postEncuesta():
-    None
+def post_encuesta():
+    encuesta= request.json
+    return mongo_db_service.crear_encuesta(encuesta)
 
-@app.route('/surveys')
-def getSurveys():
-    None
+@app.route('/surveys', methods = ['GET'])
+def get_surveys():
+    return mongo_db_service.listar_encuestas()
 
-@app.route('/surveys/<int:id>')
-def getSurvey():
-    None
+@app.route('/surveys/<int:id>', methods = ['GET'])
+def get_survey(id):
+    id_to_search = id
+    return mongo_db_service.detalles_encuesta(id_to_search)
 
+#Autenticacion
 @app.route('/surveys/<int:id>', methods = ['PUT'])
-def putSurvey():
-    None
+def put_survey(id):
+    encuesta = request.get_json()
+    id_to_search = id
+    return mongo_db_service.actualizar_encuesta(id_to_search, encuesta)
 
+#Autenticacion
 @app.route('/surveys/<int:id>', methods = ['DELETE'])
-def deleteSurvey():
-    None
+def delete_survey(id):
+    id_to_search = id
+    return mongo_db_service.eliminar_encuesta(id_to_search)
 
+#Autenticacion
 @app.route('/surveys/<int:id>/publish', methods = ['POST'])
-def publishSurvey():
-    None
+def publish_survey(id):
+    id_to_search = id
+    return mongo_db_service.publicar_encuesta(id_to_search)
 
 #Endpoints para las Preguntas de las Encuestas [Anthony]
 @app.route('/surveys/<int:id>/questions', methods = ['POST'])
-def postQuestion():
-    None
+def post_question(id):
+    encuesta= id
+    pregunta = request.json
+    return mongo_db_service.crear_pregunta(encuesta, pregunta)
 
-@app.route('/surveys/<int:id>/questions')
-def getQuestions():
-    None
+@app.route('/surveys/<int:id>/questions', methods = ['GET'])
+def get_questions(id):
+    encuesta= id
+    return mongo_db_service.listar_preguntas(encuesta)
 
-@app.route('/surveys/<int:id>/questions/<int:questionId>', methods = ['PUT'])
-def putQuestion():
-    None
+@app.route('/surveys/<int:id>/questions/<int:question_id>', methods = ['PUT'])
+def put_question(id, question_id):
+    encuesta= id
+    pregunta = request.json
+    id_pregunta = question_id
+    return mongo_db_service.actualizar_pregunta(encuesta, pregunta, id_pregunta)
 
-@app.route('/surveys/<int:id>/questions/<int:questionId>', methods = ['DELETE'])
-def deleteQuestion():
-    None
+@app.route('/surveys/<int:id>/questions/<int:question_id>', methods = ['DELETE'])
+def delete_question(id, question_id):
+    encuesta= id
+    id_pregunta = question_id
+    return mongo_db_service.eliminar_pregunta(encuesta, id_pregunta)
 
 #Endpoints para las Respuestas de las Encuestas [Anthony]
 @app.route('/surveys/<int:id>/responses', methods = ['POST'])
-def postResponse():
-    None
-
-@app.route('/surveys/<int:id>/responses')
-def getResponses():
-    None
+def post_response(id):
+    encuesta= id
+    respuestas = request.json
+    return mongo_db_service.enviar_respuestas(encuesta, respuestas)
+#Autenticacion
+@app.route('/surveys/<int:id>/responses', methods = ['GET'])
+def get_responses(id):
+    encuesta= id
+    return mongo_db_service.listar_respuestas(encuesta)
 
 
 #Endpoints para los encuestados 
