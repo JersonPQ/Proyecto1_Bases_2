@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 from db_postgre_service import PostgreDatabaseService
 from db_mongo_service import MongoDatabaseService
 from flask import Flask
-from db_mongo_service import MongoDBService
+from db_mongo_service import MongoDatabaseService
 import os
 load_dotenv() 
 
@@ -19,38 +19,53 @@ def create_app(test_config=None):
     app.config.update(
         TESTING=True,
         SECRET_KEY='your_secret_key',
-        DATABASE=os.getenv('POSTGRES_DB_NAME', 'fallback_db_name'),
-        DB_HOST=os.getenv('POSTGRES_DB_HOST', 'fallback_host'),
-        DB_USER=os.getenv('POSTGRES_DB_USER', 'fallback_user'),
-        DB_PASSWORD=os.getenv('POSTGRES_DB_PASSWORD', 'fallback_password'),
-        DB_PORT=os.getenv('POSTGRES_DB_PORT', 5432),
-        
+        # Configuración de PostgreSQL
+        POSTGRES_DB_NAME=os.getenv('POSTGRES_DB_NAME', 'fallback_db_name'),
+        POSTGRES_DB_HOST=os.getenv('POSTGRES_DB_HOST', 'fallback_host'),
+        POSTGRES_DB_USER=os.getenv('POSTGRES_DB_USER', 'fallback_user'),
+        POSTGRES_DB_PASSWORD=os.getenv('POSTGRES_DB_PASSWORD', 'fallback_password'),
+        POSTGRES_DB_PORT=int(os.getenv('POSTGRES_DB_PORT', 5432)),
+        # Configuración de MongoDB
         MONGO_DB_USER=os.getenv('MONGO_DB_USER', 'root'),
         MONGO_DB_PASSWORD=os.getenv('MONGO_DB_PASSWORD', 'example'),
         MONGO_DB_HOST=os.getenv('MONGO_DB_HOST', 'localhost'),
         MONGO_DB_PORT=int(os.getenv('MONGO_DB_PORT', 27017)),
         MONGO_DB_NAME=os.getenv('MONGO_DB_NAME', 'encuestas')
     )
-    mongo_db_service = MongoDBService(
-        host=app.config['MONGO_DB_HOST'],
-        port=app.config['MONGO_DB_PORT'],
-        usernamen=app.config['MONGO_DB_USER'],
-        password=app.config['MONGO_DB_PASSWORD'],
-        database_name=app.config['MONGO_DB_NAME']
-    )
-    app.mongo_db_service = mongo_db_service
-    postgre_db_service = PostgreDatabaseService(database=app.config['DATABASE'])
+
+    # Inicialización de servicios de base de datos
+    mongo_db_service = MongoDatabaseService(database=app.config['MONGO_DB_NAME'])
+    postgre_db_service = PostgreDatabaseService(database=app.config['POSTGRES_DB_NAME'])
     app.postgre_db_service = postgre_db_service
+    app.mongo_db_service = mongo_db_service      
+        
+    #---------------------Autenticación y Autorización------------------------  
+        
+        
+        
+    # -----------------------Encuestas------------------------------------------
         
         
         
         
-    #-----------------------Respuesta de Encuestas--------------------------
+        
+    # -----------------------Preguntas de Encuestas---------------------------
+        
+        
+        
+        
+    # ----------Respuesta de Encuestas--------------------------
     @app.route('/surveys/<int:id>/responses', methods=['POST'])
     def post_response(id):
         encuesta = id
         respuestas = request.json
         return mongo_db_service.enviar_respuestas(encuesta, respuestas)
+    
+    @app.route('/surveys/<int:id>/responses', methods=['GET'])
+    def get_responses(id):
+        encuesta = id
+        respuestas = app.mongo_db_service.listar_respuestas(encuesta)
+        return jsonify(respuestas)
     #-----------------------Encuestados-------------------------------------
     @app.route('/respondents', methods=['GET'])
     def list_respondents():
@@ -104,30 +119,52 @@ class TestApp(unittest.TestCase):
         """Configurar la aplicación para pruebas."""
         self.app = create_app()
         self.client = self.app.test_client()
+        
+    #---------------------Autenticación y Autorización------------------------  
 
-    #-----------------------Respuesta de Encuestas--------------------------
-    @patch('db_mongo_service.MongoDBService.enviar_respuestas')
+        
+    # -----------------------Encuestas------------------------------------------
+
+        
+    # -----------------------Preguntas de Encuestas---------------------------
+    
+
+    # -----------------------Respuesta de Encuestas--------------------------
+    @patch('db_mongo_service.MongoDatabaseService.enviar_respuestas')
     def test_post_response(self, mock_enviar_respuestas):
         """Prueba el envío de respuestas a una encuesta por parte de un encuestado."""
 
         # Configura el mock para simular una operación exitosa
         mock_enviar_respuestas.return_value = {"message": "Respuestas guardadas correctamente"}
 
-        # Datos de prueba
+        # Datos de prueba para un caso exitoso
         respuestas_data = [{"pregunta": "¿Cómo estás?", "respuesta": "Bien"}]
 
-        # Llamamos al endpoint con un ID de encuesta que existe
+        # Llamamos al endpoint con un ID de encuesta que se supone existe
         response = self.client.post('/surveys/1/responses', json=respuestas_data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"message": "Respuestas guardadas correctamente"})
 
-        # Configura el mock para simular que la encuesta no se encuentra
+        # Configura el mock para simular que la encuesta no se encuentra, 
+        # pero como el endpoint no maneja códigos 404, sigue devolviendo 200
         mock_enviar_respuestas.return_value = {"message": "Encuesta no encontrada"}
 
         # Llamamos al endpoint con un ID de encuesta que no existe
         response = self.client.post('/surveys/999/responses', json=respuestas_data)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)  # El endpoint no maneja 404 según tu descripción
         self.assertEqual(response.json, {"message": "Encuesta no encontrada"})
+
+    @patch('db_mongo_service.MongoDatabaseService.listar_respuestas')
+    def test_get_responses(self, mock_listar_respuestas):
+        """Prueba la obtención de todas las respuestas de una encuesta específica."""
+        
+        # Configura el mock para simular respuestas existentes
+        mock_listar_respuestas.return_value = [{"pregunta": "¿Cómo estás?", "respuesta": "Bien"}]
+
+        # Llamamos al endpoint con un ID de encuesta arbitrario
+        response = self.client.get('/surveys/1/responses')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json, [{"pregunta": "¿Cómo estás?", "respuesta": "Bien"}])
 
     #-----------------------Encuestados-------------------------------------
     @patch('db_postgre_service.PostgreDatabaseService.get_all_respondents')

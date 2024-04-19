@@ -142,6 +142,8 @@ def post_response(id):
     encuesta= id
     respuestas = request.json
     return mongo_db_service.enviar_respuestas(encuesta, respuestas)
+
+
 #Autenticacion
 @app.route('/surveys/<int:id>/responses', methods = ['GET'])
 def get_responses(id):
