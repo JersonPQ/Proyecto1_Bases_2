@@ -16,10 +16,10 @@ POSTGRES_DB_USER = os.getenv('POSTGRES_DB_USER')
 POSTGRES_DB_PASSWORD = os.getenv('POSTGRES_DB_PASSWORD')
 POSTGRES_DB_PORT = os.getenv('POSTGRES_DB_PORT')
 
-MONGO_DB_HOST = os.getenv('MONGO_DB_HOST')
-MONGO_DB_PORT = int(os.getenv('MONGO_DB_PORT'))
-MONGO_DB_USER = os.getenv('MONGO_DB_USER')
-MONGO_DB_PASSWORD = os.getenv('MONGO_DB_PASSWORD')
+MONGO_DB_HOST = os.getenv('MONGO_DB_HOST', 'localhost')
+MONGO_DB_PORT = int(os.getenv('MONGO_DB_PORT', '27017'))  
+MONGO_DB_USER = os.getenv('MONGO_DB_USER', 'default_user')
+MONGO_DB_PASSWORD = os.getenv('MONGO_DB_PASSWORD', 'default_password')
 
 postgre_db = PostgreDatabase(database=POSTGRES_DB_NAME, host=POSTGRES_DB_HOST,
                                 user=POSTGRES_DB_USER, password=POSTGRES_DB_PASSWORD,
@@ -202,6 +202,8 @@ def post_response(id):
     encuesta= id
     respuestas = request.get_json()
     return mongo_db_service.enviar_respuestas(encuesta, respuestas)
+
+
 #Autenticacion
 @app.route('/surveys/<int:id>/responses', methods = ['GET'])
 def get_responses(id):
