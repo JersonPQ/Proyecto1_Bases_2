@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask, request, make_response, jsonify
+from Security import Security
 
 from db_postgre import PostgreDatabase
 from db_postgre_service import PostgreDatabaseService
@@ -50,34 +51,84 @@ def insertar_user():
 @app.route('/auth/register', methods = ['POST'])
 def register():
     user = request.json
-    data = postgre_db_service.insertar_user(user)
+    data = postgre_db_service.insertUser(user)
     return data
 
 #Aqui se tiene que crear el Token y guardarlo en la cookie
 @app.route('/auth/login', methods = ['POST'])
 def login():
-    None
+    user = request.json
+    data = postgre_db_service.getUser(user["name"], user["password"])
+    token = Security.generateTokem(data)
+    response = make_response(data)
+    response.set_cookie("token", token)
+    response.set_cookie("userType", str(data["userRol"]))
+    return response
 
 @app.route('/auth/logout')
 def logout():
-    None
+    token = request.cookies.get("token")
+    userType = request.cookies.get("userType")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : userType})
+    if hasAccess[0]:
+        response = make_response({"message" : "Log out. Hasta pronto"})
+        response.set_cookie("token", "", expires=0)
+        return response
+    return jsonify({"message" : hasAccess[1]})
 
 #Endpoints para Usuarios
 @app.route('/users')
 def getUsers():
-    None
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if hasAccess[0]:
+        data = postgre_db_service.getUsers()
+        print(token)
+        return data
+    return jsonify({"message" : hasAccess[1]})
 
 @app.route('/users/<int:id>')
-def getUser():
-    None
+def getUser(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if hasAccess[0]:
+        data = postgre_db_service.getUserId(id)
+        print(token)
+        return data
+    return jsonify({"message" : hasAccess[1]})
 
 @app.route('/users/<int:id>', methods = ['PUT'])
-def putUser():
-    None
+def putUser(id):
+    token = request.cookies.get("token")
+    userType = request.cookies.get("userType")
+    if userType == 1:  
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    else:
+        data = postgre_db_service.getUserId(id)
+        if 'name' not in data:
+            return jsonify({"message" : "User not found"})
+        hasAccess = Security.verifyToken({"token" : token, "userType" : userType})
+        if data["name"] != hasAccess[1]:
+            return jsonify({"message" : "You don't have permission"})
+    if hasAccess[0]:
+        data = request.json
+        updatedUser = postgre_db_service.updateUser(id, data)
+        if updatedUser:
+            return jsonify({"message" : "Cambios realizados"})
+        return jsonify({"message" : "Cambios no realizados"})
+    else:
+        return jsonify({"message" : hasAccess[1]})
 
 @app.route('/users/<int:id>', methods = ['DELETE'])
-def deleteUser():
-    None
+def deleteUser(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if hasAccess[0]:
+        response = postgre_db_service.deleteUser(id)
+        if response:
+            return jsonify({"message" : "Usuario eliminado"})
+        return jsonify({"message" : "Error al elminar"})
+    return jsonify({"message" : hasAccess[1]})
 
 #Enpoints para Encuestas [Anthony]
 #Autenticacion
