@@ -8,7 +8,9 @@ class MongoDB:
         
     # ----------------- Consultas de Encuestas ----------------- #
     #Crear una nueva encuesta
-    def crear_encuesta(self, encuesta: dict) -> dict:
+    def crear_encuesta(self, encuesta: dict, token: int) -> dict:
+        #Agregar id usuario que crea la encuesta
+        encuesta["token"] = token
         return self.respuestas_collection.insert_one(encuesta)
     
     #Listar todas las encuestas disponibles publicamente

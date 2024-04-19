@@ -83,7 +83,9 @@ def delete_user():
 @app.route('/surveys', methods = ['POST'])
 def post_encuesta():
     encuesta= request.get_json()
-    resultado= mongo_db_service.crear_encuesta(encuesta)
+    #Agregar id usuario que crea la encuesta
+    token= encuesta["token"]
+    resultado= mongo_db_service.crear_encuesta(encuesta,token)
     if resultado.acknowledged:
         return jsonify({"message": "Encuesta creada exitosamente", "id": str(resultado.inserted_id)}), 201
     else:

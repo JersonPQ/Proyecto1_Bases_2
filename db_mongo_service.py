@@ -5,8 +5,8 @@ class MongoDatabaseService:
         self.database = database
     
     # ----------------- Consultas Encuestas ----------------- #
-    def crear_encuesta(self, encuesta: dict) -> dict:
-        return self.database.crear_encuesta(encuesta)
+    def crear_encuesta(self, encuesta: dict, token: int) -> dict:
+        return self.database.crear_encuesta(encuesta, token)
     
     def listar_encuestas(self) -> list:
         return self.database.listar_encuestas()
