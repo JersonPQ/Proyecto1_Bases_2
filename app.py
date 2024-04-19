@@ -7,6 +7,7 @@ from db_postgre_service import PostgreDatabaseService
 
 from db_mongo import MongoDB
 from db_mongo_service import MongoDatabaseService
+from bson import json_util
 
 POSTGRES_DB_HOST = os.getenv('POSTGRES_DB_HOST')
 POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
@@ -60,32 +61,38 @@ def logout():
     None
 
 #Endpoints para Usuarios
-@app.route('/users')
-def getUsers():
+#Autenticacion
+@app.route('/users', methods = ['GET'])
+def get_users():
     None
 
-@app.route('/users/<int:id>')
-def getUser():
+@app.route('/users/<int:id>', methods = ['GET'])
+def get_user():
     None
-
+#Autenticacion
 @app.route('/users/<int:id>', methods = ['PUT'])
-def putUser():
+def put_user():
     None
-
+#Autenticacion
 @app.route('/users/<int:id>', methods = ['DELETE'])
-def deleteUser():
+def delete_user():
     None
 
 #Enpoints para Encuestas [Anthony]
 #Autenticacion
 @app.route('/surveys', methods = ['POST'])
 def post_encuesta():
-    encuesta= request.json
-    return mongo_db_service.crear_encuesta(encuesta)
-
+    encuesta= request.get_json()
+    resultado= mongo_db_service.crear_encuesta(encuesta)
+    if resultado.acknowledged:
+        return jsonify({"message": "Encuesta creada exitosamente", "id": str(resultado.inserted_id)}), 201
+    else:
+        return jsonify({"message": "Error al crear la encuesta"}), 400
 @app.route('/surveys', methods = ['GET'])
 def get_surveys():
-    return mongo_db_service.listar_encuestas()
+    surveys = [survey for survey in mongo_db_service.listar_encuestas()]
+    surveys_json= json_util.dumps(surveys)
+    return surveys_json, 200
 
 @app.route('/surveys/<int:id>', methods = ['GET'])
 def get_survey(id):
@@ -115,7 +122,7 @@ def publish_survey(id):
 @app.route('/surveys/<int:id>/questions', methods = ['POST'])
 def post_question(id):
     encuesta= id
-    pregunta = request.json
+    pregunta = request.get_json()
     return mongo_db_service.crear_pregunta(encuesta, pregunta)
 
 @app.route('/surveys/<int:id>/questions', methods = ['GET'])
@@ -126,7 +133,7 @@ def get_questions(id):
 @app.route('/surveys/<int:id>/questions/<int:question_id>', methods = ['PUT'])
 def put_question(id, question_id):
     encuesta= id
-    pregunta = request.json
+    pregunta = request.get_json()
     id_pregunta = question_id
     return mongo_db_service.actualizar_pregunta(encuesta, pregunta, id_pregunta)
 
@@ -140,7 +147,7 @@ def delete_question(id, question_id):
 @app.route('/surveys/<int:id>/responses', methods = ['POST'])
 def post_response(id):
     encuesta= id
-    respuestas = request.json
+    respuestas = request.get_json()
     return mongo_db_service.enviar_respuestas(encuesta, respuestas)
 #Autenticacion
 @app.route('/surveys/<int:id>/responses', methods = ['GET'])
