@@ -4,6 +4,25 @@ class PostgreDatabaseService:
     def __init__(self, database: PostgreDatabase) -> None:
         self.database = database
 
+    # ---------------Auth Users--------------------
+    def insertUser(self, user):
+        return self.database.insert_user(user)
+
+    def getUser(self, userName, userPassword):
+        return self.database.getUser({"name" : userName, "password" : userPassword})
+
+    def getUsers(self):
+        return self.database.getUsers()
+    
+    def getUserId(self, userId):
+        return self.database.getUserId(userId)
+    
+    def updateUser(self, userId, data):
+        return self.database.updateUser(userId, data)
+
+    def deleteUser(self, userId):
+        return self.database.deleteUser(userId)
+
     # ---------------Encuestados (Respondents)--------------------
     def insert_respondent(self, respondent_data):
         return self.database.insert_respondent(respondent_data)
