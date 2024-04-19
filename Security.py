@@ -18,15 +18,32 @@ class Security():
         return jwt.encode(payload, cls.secret[authUser['userRol']], "HS256")
     
     @classmethod
+    def generateTokenSurvey(cls, key):
+        payload = {
+            'iat' : datetime.datetime.now(tz=cls.tz),
+            'detail' : 'Survey'
+        }
+        return jwt.encode(payload, key, "HS256")
+
+    @classmethod
     def verifyToken(cls, headers):
         if headers["token"]:
             encodedToken = headers["token"]
             if(len(encodedToken) > 0):
-                try:
-                    payload = jwt.decode(encodedToken, cls.secret[int(headers["userType"])], algorithms=["HS256"])
-                    return [True, payload["username"]]
-                except (jwt.ExpiredSignatureError):
-                    return [False, "Token expirado"]
-                except (jwt.InvalidSignatureError):
-                    return [False, "Token incorrecto"]
+                if headers["userType"]:
+                    try:
+                        payload = jwt.decode(encodedToken, cls.secret[int(headers["userType"])], algorithms=["HS256"])
+                        return [True, payload["username"]]
+                    except (jwt.ExpiredSignatureError):
+                        return [False, "Token expirado"]
+                    except (jwt.InvalidSignatureError):
+                        return [False, "Token incorrecto"]
+                else:
+                    try:
+                        payload = jwt.decode(encodedToken, cls.secret[int(headers["tokenKey"])], algorithms=["HS256"])
+                        return [True, payload["username"]]
+                    except (jwt.ExpiredSignatureError):
+                        return [False, "Token expirado"]
+                    except (jwt.InvalidSignatureError):
+                        return [False, "Token incorrecto"]
         return [False, "No existe el token"]
