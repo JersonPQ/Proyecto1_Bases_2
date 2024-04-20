@@ -77,6 +77,8 @@ def logout():
         return response
     return jsonify({"message" : hasAccess[1]})
 
+
+
 #Endpoints para Usuarios
 @app.route('/users')
 def getUsers():
@@ -171,6 +173,11 @@ def publish_survey(id):
     id_to_search = id
     return mongo_db_service.publicar_encuesta(id_to_search)
 
+
+
+
+
+
 #Endpoints para las Preguntas de las Encuestas [Anthony]
 @app.route('/surveys/<int:id>/questions', methods = ['POST'])
 def post_question(id):
@@ -195,6 +202,13 @@ def delete_question(id, question_id):
     encuesta= id
     id_pregunta = question_id
     return mongo_db_service.eliminar_pregunta(encuesta, id_pregunta)
+
+
+
+
+
+
+
 
 #Endpoints para las Respuestas de las Encuestas [Anthony]
 @app.route('/surveys/<int:id>/responses', methods = ['POST'])
