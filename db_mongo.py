@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from bson import ObjectId
 
 class MongoDB:
     def __init__(self, host: str = "localhost", port: int = 27017, usernamen: str = "root", password: str = "example") -> None:
@@ -19,34 +20,49 @@ class MongoDB:
     
     #Muestra los detalles de una encuesta especifica
     def detalles_encuesta(self, id: str) -> dict:
-         flag = self.respuestas_collection.find_one({"_id": id})
-         if flag:
-                return flag
-         else:
-                return {"message": "Encuesta no encontrada"}
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            # Convert _id to string before returning
+            survey['_id'] = str(survey['_id'])
+            return survey
+        else:
+            return {"message": "Encuesta no encontrada"}
          
     #Actualizar los detalles de una encuesta especifica
     def actualizar_encuesta(self, id: str, encuesta: dict) -> dict:
-        flag= self.respuestas_collection.find_one({"_id": id})
-        if flag:
-            return self.respuestas_collection.update_one({"_id": id}, {"$set": encuesta})
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            # Convert _id to string before returning
+            survey['_id'] = str(survey['_id'])
+            self.respuestas_collection.update_one({"_id": survey_id}, {"$set": encuesta})
+            return {"message": "Encuesta actualizada"}
         else:
             return {"message": "Encuesta no encontrada"}
         
     
     #Eliminar una encuesta especifica
     def eliminar_encuesta(self, id: str) -> dict:
-        flag= self.respuestas_collection.find_one({"_id": id})
-        if flag:
-            return self.respuestas_collection.delete_one({"_id": id})
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            # Convert _id to string before returning
+            survey['_id'] = str(survey['_id'])
+            self.respuestas_collection.delete_one({"_id": survey_id})
+            return {"message": "Encuesta eliminada"}
         else:
             return {"message": "Encuesta no encontrada"}
     
     #Publicar una encuesta para hacerla accesible a los usuarios
     def publicar_encuesta(self, id: str) -> dict:
-        flag= self.respuestas_collection.find_one({"_id": id})
-        if flag:
-            return self.respuestas_collection.update_one({"_id": id}, {"$set": {"publicada": True}})
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            # Convert _id to string before returning
+            survey['_id'] = str(survey['_id'])
+            self.respuestas_collection.update_one({"_id": survey_id}, {"$set": {"publicada": True}})
+            return {"message": "Encuesta publicada"}
         else:
             return {"message": "Encuesta no encontrada"}
     #----------------- Consultas de Preguntas ----------------- #

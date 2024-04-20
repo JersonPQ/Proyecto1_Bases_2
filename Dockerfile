@@ -9,8 +9,8 @@ ENV POSTGRES_DB_NAME='encuesta'
 ENV POSTGRES_DB_HOST='localhost'
 ENV POSTGRES_DB_PORT=5432
 
-ENV REDIS_USER='redis'
-ENV REDIS_PASSWORD='redis'
+ENV REDIS_DB_HOST='redis'
+ENV REDIS_DB_PORT=6379
 
 # Set the working directory
 WORKDIR /opt/app

@@ -286,7 +286,18 @@ def create_app(test_config=None):
             return '', 204
         else:
             return jsonify({"error": "Respondent not found"}), 404
+        
+        
+    #------- ANÁLISIS -----------
+    @patch('db_mongo_service.MongoDatabaseService.listar_respuestas')
+    def test_get_survey_analysis(self, mock_listar_respuestas):
+        mock_data = {'_id': '123', 'respuestas': [{'pregunta': '¿Qué piensas?', 'respuesta': 'Es bueno'}]}
+        mock_listar_respuestas.return_value = mock_data
+        response = self.client.get('/surveys/123/analysis')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), mock_data)
     return app
+    
 
 class TestApp(unittest.TestCase):
     def setUp(self):
@@ -661,6 +672,7 @@ class TestApp(unittest.TestCase):
         response = self.client.delete('/respondents/999')
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json, {"error": "Respondent not found"})
+
 
 if __name__ == '__main__':
     unittest.main()

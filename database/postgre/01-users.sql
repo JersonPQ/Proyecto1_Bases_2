@@ -1,4 +1,4 @@
 \c encuesta;
 
 -- prueba de insertar un usuario
-INSERT INTO users (name, password) VALUES ('admin', 'admin');
+INSERT INTO users (name, password, userRol) VALUES ('admin', 'admin', 1);
