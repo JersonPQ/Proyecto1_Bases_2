@@ -1,5 +1,5 @@
-from pymongo import MongoClient
 from bson import ObjectId
+from pymongo import MongoClient
 
 class MongoDB:
     def __init__(self, host: str = "localhost", port: int = 27017, usernamen: str = "root", password: str = "example") -> None:
@@ -23,7 +23,6 @@ class MongoDB:
         survey_id = ObjectId(id)
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
-            # Convert _id to string before returning
             survey['_id'] = str(survey['_id'])
             return survey
         else:
@@ -34,7 +33,6 @@ class MongoDB:
         survey_id = ObjectId(id)
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
-            # Convert _id to string before returning
             survey['_id'] = str(survey['_id'])
             self.respuestas_collection.update_one({"_id": survey_id}, {"$set": encuesta})
             return {"message": "Encuesta actualizada"}
@@ -47,7 +45,6 @@ class MongoDB:
         survey_id = ObjectId(id)
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
-            # Convert _id to string before returning
             survey['_id'] = str(survey['_id'])
             self.respuestas_collection.delete_one({"_id": survey_id})
             return {"message": "Encuesta eliminada"}
@@ -59,7 +56,6 @@ class MongoDB:
         survey_id = ObjectId(id)
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
-            # Convert _id to string before returning
             survey['_id'] = str(survey['_id'])
             self.respuestas_collection.update_one({"_id": survey_id}, {"$set": {"publicada": True}})
             return {"message": "Encuesta publicada"}
@@ -68,54 +64,85 @@ class MongoDB:
     #----------------- Consultas de Preguntas ----------------- #
     #Agregar preguntas a una encuesta especifica
     def agregar_preguntas(self, id: str, preguntas: list) -> dict:
-        flag= self.respuestas_collection.find_one({"_id": id})
-        if flag:
-            return self.respuestas_collection.update_one({"_id": id}, {"$push": {"preguntas": preguntas}})
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            survey['_id'] = str(survey['_id'])
+            self.respuestas_collection.update_one({"_id": survey_id}, {"$push": {"preguntas": preguntas}})
+            return {"message": "Preguntas agregadas"}
         else:
             return {"message": "Encuesta no encontrada"}
-
+       
     #Listar las preguntas de una encuesta especifica
     def listar_preguntas(self, id: str) -> list:
-        flag= self.respuestas_collection.find_one({"_id": id})
-        if flag:
-            return self.respuestas_collection.find_one({"_id": id}, {"preguntas": 1})
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            survey['_id'] = str(survey['_id'])
+            return self.respuestas_collection.find_one({"_id": survey_id}, {"preguntas": 1})
         else:
             return ["message", "Encuesta no encontrada"]
     
     #Actualiza una pregunta especifica
     def actualizar_pregunta(self, id: str, pregunta: dict, id_pregunta: str) -> dict:
-        flag1= self.respuestas_collection.find_one({"_id": id})
-        flag2= self.respuestas_collection.find_one({"_id": id, "preguntas._id": id_pregunta})
-        if flag1:
-            if flag2:
-                return self.respuestas_collection.update_one({"_id": id, "preguntas._id": id_pregunta}, {"$set": {"preguntas.$": pregunta}})
-            else:    
-                return {"message": "Pregunta no encontrada"}
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            survey['_id'] = str(survey['_id'])
+            question_filter = {"_id": survey_id, "id_pregunta": id_pregunta}
+            update_operation = {}
+            
+            if "pregunta" in pregunta:
+                update_operation["$set"] = {"preguntas.$.pregunta": pregunta["pregunta"]}
+            
+            if "opciones" in pregunta:
+                update_operation["$set"] = {"preguntas.$.opciones": pregunta["opciones"]}
+            
+            update_result = self.respuestas_collection.update_one(question_filter, update_operation)
+            
+            if update_result.modified_count == 1:
+                return {"message": "Pregunta actualizada exitosamente"}
+            else:
+                return {"message": "Error al actualizar la pregunta"}  
         else:
-            return {"message": "Encuesta no encontrada"}    
+            return {"message": "Encuesta no encontrada"}
+                
+       
     #Eliminar una pregunta de una encuesta
     def eliminar_pregunta(self, id: str, id_pregunta: str) -> dict:
-        flag1= self.respuestas_collection.find_one({"_id": id})
-        flag2= self.respuestas_collection.find_one({"_id": id, "preguntas._id": id_pregunta})
-        if flag1:
-            if flag2:
-                return self.respuestas_collection.update_one({"_id": id}, {"$pull": {"preguntas": {"_id": id_pregunta}}})
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            survey['_id'] = str(survey['_id'])
+            self.respuestas_collection.find_one({"_id": id})
+            question_filter = {"_id": survey_id, "id_pregunta": id_pregunta}
+            delete_result = self.respuestas_collection.delete_one(question_filter)
+            if delete_result.deleted_count == 1:
+                return {"message": "Pregunta eliminada exitosamente"}
             else:
-                return {"message": "Pregunta no encontrada"}
+                return {"message": "Pregunta no eliminada"}
         else:
             return {"message": "Encuesta no encontrada"}    
     #----------------- Consultas de Respuestas ----------------- #
     #Envia respuestas a una encuesta por parte de un encuestado
     def enviar_respuestas(self, id: str, respuestas: list) -> dict:
-        flag= self.respuestas_collection.find_one({"_id": id})
-        if flag:
-            return self.respuestas_collection.update_one({"_id": id}, {"$push": {"respuestas": respuestas}})
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            survey['_id'] = str(survey['_id'])
+            update=self.respuestas_collection.update_one({"_id": id}, {"$push": {"respuestas": respuestas}})
+            if update.modified_count == 1:
+                return {"message": "Respuestas enviadas exitosamente"}
+            else:
+                return {"message": "Error al enviar las respuestas"}
         else:
             return {"message": "Encuesta no encontrada"}    
     #Lista todas las respuestas de una encuesta especifica
     def listar_respuestas(self, id: str) -> list:
-        flag= self.respuestas_collection.find_one({"_id": id})
-        if flag:
-            return self.respuestas_collection.find_one({"_id": id}, {"respuestas": 1})
+        survey_id = ObjectId(id)
+        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        if survey:
+            survey['_id'] = str(survey['_id'])
+            return self.respuestas_collection.find_one({"_id": survey_id}, {"respuestas": 1})
         else:
             return ["message", "Encuesta no encontrada"]
