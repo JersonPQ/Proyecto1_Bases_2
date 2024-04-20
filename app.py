@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask, request, make_response, jsonify
+from Security import Security
 
 from db_postgre import PostgreDatabase
 from db_postgre_service import PostgreDatabaseService
@@ -15,10 +16,10 @@ POSTGRES_DB_USER = os.getenv('POSTGRES_DB_USER')
 POSTGRES_DB_PASSWORD = os.getenv('POSTGRES_DB_PASSWORD')
 POSTGRES_DB_PORT = os.getenv('POSTGRES_DB_PORT')
 
-MONGO_DB_HOST = os.getenv('MONGO_DB_HOST')
-MONGO_DB_PORT = int(os.getenv('MONGO_DB_PORT'))
-MONGO_DB_USER = os.getenv('MONGO_DB_USER')
-MONGO_DB_PASSWORD = os.getenv('MONGO_DB_PASSWORD')
+MONGO_DB_HOST = os.getenv('MONGO_DB_HOST', 'localhost')
+MONGO_DB_PORT = int(os.getenv('MONGO_DB_PORT', '27017'))  
+MONGO_DB_USER = os.getenv('MONGO_DB_USER', 'default_user')
+MONGO_DB_PASSWORD = os.getenv('MONGO_DB_PASSWORD', 'default_password')
 
 postgre_db = PostgreDatabase(database=POSTGRES_DB_NAME, host=POSTGRES_DB_HOST,
                                 user=POSTGRES_DB_USER, password=POSTGRES_DB_PASSWORD,
@@ -50,46 +51,109 @@ def insertar_user():
 #Endpoints para autenticación
 @app.route('/auth/register', methods = ['POST'])
 def register():
-    None
+    user = request.json
+    data = postgre_db_service.insertUser(user)
+    return data
 
+#Aqui se tiene que crear el Token y guardarlo en la cookie
 @app.route('/auth/login', methods = ['POST'])
 def login():
-    None
+    user = request.json
+    data = postgre_db_service.getUser(user["name"], user["password"])
+    token = Security.generateTokem(data)
+    response = make_response(data)
+    response.set_cookie("token", token)
+    response.set_cookie("userType", str(data["userRol"]))
+    return response
 
 @app.route('/auth/logout')
 def logout():
-    None
+    token = request.cookies.get("token")
+    userType = request.cookies.get("userType")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : userType})
+    if hasAccess[0]:
+        response = make_response({"message" : "Log out. Hasta pronto"})
+        response.set_cookie("token", "", expires=0)
+        response.set_cookie("userType", "", expires=0)
+        return response
+    return jsonify({"message" : hasAccess[1]})
+
+
 
 #Endpoints para Usuarios
-#Autenticacion
-@app.route('/users', methods = ['GET'])
-def get_users():
-    None
+@app.route('/users')
+def getUsers():
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if hasAccess[0]:
+        data = postgre_db_service.getUsers()
+        print(token)
+        return data
+    return jsonify({"message" : hasAccess[1]})
 
-@app.route('/users/<int:id>', methods = ['GET'])
-def get_user():
-    None
-#Autenticacion
+@app.route('/users/<int:id>')
+def getUser(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if hasAccess[0]:
+        data = postgre_db_service.getUserId(id)
+        print(token)
+        return data
+    return jsonify({"message" : hasAccess[1]})
+
 @app.route('/users/<int:id>', methods = ['PUT'])
-def put_user():
-    None
-#Autenticacion
+def putUser(id):
+    token = request.cookies.get("token")
+    userType = request.cookies.get("userType")
+    if userType == 1:  
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    else:
+        data = postgre_db_service.getUserId(id)
+        if 'name' not in data:
+            return jsonify({"message" : "User not found"})
+        hasAccess = Security.verifyToken({"token" : token, "userType" : userType})
+        if data["name"] != hasAccess[1]:
+            return jsonify({"message" : "You don't have permission"})
+    if hasAccess[0]:
+        data = request.json
+        updatedUser = postgre_db_service.updateUser(id, data)
+        if updatedUser:
+            return jsonify({"message" : "Cambios realizados"})
+        return jsonify({"message" : "Cambios no realizados"})
+    else:
+        return jsonify({"message" : hasAccess[1]})
+
 @app.route('/users/<int:id>', methods = ['DELETE'])
-def delete_user():
-    None
+def deleteUser(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if hasAccess[0]:
+        response = postgre_db_service.deleteUser(id)
+        if response:
+            return jsonify({"message" : "Usuario eliminado"})
+        return jsonify({"message" : "Error al elminar"})
+    return jsonify({"message" : hasAccess[1]})
 
 #Enpoints para Encuestas [Anthony]
 #Autenticacion
 @app.route('/surveys', methods = ['POST'])
 def post_encuesta():
     encuesta= request.get_json()
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "Ypu don't have permission"})
     #Agregar id usuario que crea la encuesta
-    token= encuesta["token"]
+    tokenUser = request.cookies.get("token")
+    token = Security.generateTokenSurvey(tokenUser)
     resultado= mongo_db_service.crear_encuesta(encuesta,token)
     if resultado.acknowledged:
         return jsonify({"message": "Encuesta creada exitosamente", "id": str(resultado.inserted_id)}), 201
     else:
         return jsonify({"message": "Error al crear la encuesta"}), 400
+
 @app.route('/surveys', methods = ['GET'])
 def get_surveys():
     surveys = [survey for survey in mongo_db_service.listar_encuestas()]
@@ -104,6 +168,16 @@ def get_survey(id):
 #Autenticacion
 @app.route('/surveys/<int:id>', methods = ['PUT'])
 def put_survey(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     encuesta = request.get_json()
     id_to_search = id
     return mongo_db_service.actualizar_encuesta(id_to_search, encuesta)
@@ -111,18 +185,53 @@ def put_survey(id):
 #Autenticacion
 @app.route('/surveys/<int:id>', methods = ['DELETE'])
 def delete_survey(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     id_to_search = id
     return mongo_db_service.eliminar_encuesta(id_to_search)
 
 #Autenticacion
 @app.route('/surveys/<int:id>/publish', methods = ['POST'])
 def publish_survey(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     id_to_search = id
     return mongo_db_service.publicar_encuesta(id_to_search)
+
+
+
+
+
 
 #Endpoints para las Preguntas de las Encuestas [Anthony]
 @app.route('/surveys/<int:id>/questions', methods = ['POST'])
 def post_question(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     encuesta= id
     pregunta = request.get_json()
     return mongo_db_service.crear_pregunta(encuesta, pregunta)
@@ -134,6 +243,16 @@ def get_questions(id):
 
 @app.route('/surveys/<int:id>/questions/<int:question_id>', methods = ['PUT'])
 def put_question(id, question_id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     encuesta= id
     pregunta = request.get_json()
     id_pregunta = question_id
@@ -141,9 +260,26 @@ def put_question(id, question_id):
 
 @app.route('/surveys/<int:id>/questions/<int:question_id>', methods = ['DELETE'])
 def delete_question(id, question_id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     encuesta= id
     id_pregunta = question_id
     return mongo_db_service.eliminar_pregunta(encuesta, id_pregunta)
+
+
+
+
+
+
+
 
 #Endpoints para las Respuestas de las Encuestas [Anthony]
 @app.route('/surveys/<int:id>/responses', methods = ['POST'])
@@ -151,9 +287,21 @@ def post_response(id):
     encuesta= id
     respuestas = request.get_json()
     return mongo_db_service.enviar_respuestas(encuesta, respuestas)
+
+
 #Autenticacion
 @app.route('/surveys/<int:id>/responses', methods = ['GET'])
 def get_responses(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     encuesta= id
     return mongo_db_service.listar_respuestas(encuesta)
 
@@ -180,6 +328,12 @@ def register_respondent():
 @app.route('/respondents', methods=['GET'])
 #@token_required
 def list_respondents():
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "You don't have permission"})
     respondents = postgre_db_service.get_all_respondents()
     return jsonify(respondents), 200
 
@@ -188,6 +342,12 @@ def list_respondents():
 @app.route('/respondents/<int:id>', methods=['GET'])
 #@token_required
 def get_respondent(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "You don't have permission"})
     respondent = postgre_db_service.get_respondent_by_id(id)
     if respondent:
         return jsonify(respondent), 200
@@ -199,6 +359,12 @@ def get_respondent(id):
 @app.route('/respondents/<int:id>', methods=['PUT'])
 #@token_required
 def update_respondent(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "You don't have permission"})
     data = request.json
     updated_respondent = postgre_db_service.update_respondent(id, data)
     if updated_respondent:
@@ -211,6 +377,12 @@ def update_respondent(id):
 @app.route('/respondents/<int:id>', methods=['DELETE'])
 #@token_required
 def delete_respondent(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "You don't have permission"})
     result = postgre_db_service.delete_respondent(id)
     if result:
         return '', 204
@@ -221,5 +393,15 @@ def delete_respondent(id):
 #Endpoint para los Reportes y Análisis [Dario - Preguntar acerca del analisis al profe]
 @app.route('/surveys/<int:id>/analysis')
 def get_analisis(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     encuesta= id
     return mongo_db_service.listar_respuestas(encuesta)
