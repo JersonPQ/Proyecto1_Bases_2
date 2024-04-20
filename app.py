@@ -408,5 +408,6 @@ def delete_respondent(id):
 
 #Endpoint para los Reportes y Análisis [Dario - Preguntar acerca del analisis al profe]
 @app.route('/surveys/<int:id>/analysis')
-def getAnalisis():
-    None
+def get_analisis(id):
+    encuesta= id
+    return mongo_db_service.listar_respuestas(encuesta)
