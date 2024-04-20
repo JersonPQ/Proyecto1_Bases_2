@@ -36,6 +36,8 @@ class PostgreDatabase:
         row = cursor.fetchone()
         cursor.close
 
+        if row is None:
+            return None
         return {"name" : row[0], "userRol" : row[1] }
 
     

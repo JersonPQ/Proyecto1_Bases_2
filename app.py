@@ -54,6 +54,8 @@ def home():
 @app.route('/auth/register', methods = ['POST'])
 def register():
     user = request.json
+    if not user or 'name' not in user or 'password' not in user or 'userRol' not in user:
+        return jsonify({'message' : 'Faltan datos para realizar esta consulta.'})
     data = postgre_db_service.insertUser(user)
 
     # eliminar el cache de redis de users
@@ -65,7 +67,11 @@ def register():
 @app.route('/auth/login', methods = ['POST'])
 def login():
     user = request.json
+    if not user or 'name' not in user or 'password' not in user:
+        return jsonify({'message' : 'Faltan datos para realizar esta consulta.'})
     data = postgre_db_service.getUser(user["name"], user["password"])
+    if data is None:
+        return jsonify({'message' : 'User not found.'})
     token = Security.generateTokem(data)
     response = make_response(data)
     response.set_cookie("token", token)
