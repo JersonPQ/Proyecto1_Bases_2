@@ -1,3 +1,4 @@
+import json
 from bson import ObjectId
 from pymongo import MongoClient
 
@@ -57,8 +58,11 @@ class MongoDB:
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
             survey['_id'] = str(survey['_id'])
-            self.respuestas_collection.update_one({"_id": survey_id}, {"$set": {"publicada": True}})
-            return {"message": "Encuesta publicada"}
+            update = self.respuestas_collection.update_one({"_id": survey_id}, {"$set": {"publicada": True}})
+            if update.modified_count == 1:
+                return {"message": "Encuesta publicada"}
+            else:
+                return {"message": "Encuesta ya publicada o no encontrada"}
         else:
             return {"message": "Encuesta no encontrada"}
     #----------------- Consultas de Preguntas ----------------- #
@@ -76,10 +80,10 @@ class MongoDB:
     #Listar las preguntas de una encuesta especifica
     def listar_preguntas(self, id: str) -> list:
         survey_id = ObjectId(id)
-        survey = self.respuestas_collection.find_one({"_id": survey_id})
+        survey = self.respuestas_collection.find_one({"_id": survey_id}, {"preguntas": 1})
         if survey:
             survey['_id'] = str(survey['_id'])
-            return self.respuestas_collection.find_one({"_id": survey_id}, {"preguntas": 1})
+            return survey["preguntas"]
         else:
             return ["message", "Encuesta no encontrada"]
     
@@ -89,21 +93,17 @@ class MongoDB:
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
             survey['_id'] = str(survey['_id'])
-            question_filter = {"_id": survey_id, "id_pregunta": id_pregunta}
-            update_operation = {}
-            
-            if "pregunta" in pregunta:
-                update_operation["$set"] = {"preguntas.$.pregunta": pregunta["pregunta"]}
-            
-            if "opciones" in pregunta:
-                update_operation["$set"] = {"preguntas.$.opciones": pregunta["opciones"]}
-            
-            update_result = self.respuestas_collection.update_one(question_filter, update_operation)
-            
-            if update_result.modified_count == 1:
-                return {"message": "Pregunta actualizada exitosamente"}
-            else:
-                return {"message": "Error al actualizar la pregunta"}  
+            for question in survey["preguntas"]:
+                if question["id_pregunta"] == id_pregunta:
+                    question.update(pregunta)
+                    
+                    update_result = self.respuestas_collection.update_one({"_id": survey_id}, {"$set": {"preguntas": survey['preguntas']}})
+                           
+                    if update_result.modified_count == 1:
+                        return {"message": "Pregunta actualizada exitosamente"}
+                    else:
+                        return {"message": "Error al actualizar la pregunta"}
+            return {"message": "Pregunta no encontrada"}  
         else:
             return {"message": "Encuesta no encontrada"}
                 
@@ -113,14 +113,17 @@ class MongoDB:
         survey_id = ObjectId(id)
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
-            survey['_id'] = str(survey['_id'])
-            self.respuestas_collection.find_one({"_id": id})
-            question_filter = {"_id": survey_id, "id_pregunta": id_pregunta}
-            delete_result = self.respuestas_collection.delete_one(question_filter)
-            if delete_result.deleted_count == 1:
-                return {"message": "Pregunta eliminada exitosamente"}
-            else:
-                return {"message": "Pregunta no eliminada"}
+            
+            for question in survey["preguntas"]:
+                if question["id_pregunta"] == id_pregunta:
+                    survey["preguntas"].remove(question)
+                    delete_result = self.respuestas_collection.update_one({"_id": survey_id}, {"$set": {"preguntas": survey['preguntas']}})
+                    
+                    if delete_result.modified_count == 1:
+                        return {"message": "Pregunta eliminada exitosamente"}
+                    else:
+                        return {"message": "Pregunta no eliminada"}
+            return {"message": "Pregunta no encontrada"}
         else:
             return {"message": "Encuesta no encontrada"}    
     #----------------- Consultas de Respuestas ----------------- #
@@ -129,9 +132,13 @@ class MongoDB:
         survey_id = ObjectId(id)
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
-            survey['_id'] = str(survey['_id'])
-            update=self.respuestas_collection.update_one({"_id": id}, {"$push": {"respuestas": respuestas}})
-            if update.modified_count == 1:
+            
+            update_result = self.respuestas_collection.update_one(
+                {"_id": survey_id},
+                {"$push": {"respuestas": {"$each": [respuestas]}}}
+            )
+            
+            if update_result.modified_count == 1:
                 return {"message": "Respuestas enviadas exitosamente"}
             else:
                 return {"message": "Error al enviar las respuestas"}
@@ -142,7 +149,6 @@ class MongoDB:
         survey_id = ObjectId(id)
         survey = self.respuestas_collection.find_one({"_id": survey_id})
         if survey:
-            survey['_id'] = str(survey['_id'])
-            return self.respuestas_collection.find_one({"_id": survey_id}, {"respuestas": 1})
+            return survey.get("respuestas", [])
         else:
             return ["message", "Encuesta no encontrada"]

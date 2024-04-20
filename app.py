@@ -205,14 +205,14 @@ def get_surveys():
     data = redis_db_service.get_key("surveys")
     if data is None:
         data = mongo_db_service.listar_encuestas()
+        data1 = [{**survey, '_id': str(survey['_id'])} for survey in data]
 
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key("surveys", data) 
+        redis_db_service.set_key("surveys", data1) 
         # setear el tiempo de expiración
         redis_db_service.set_expire("surveys", 60) 
 
-    surveys = [survey for survey in data]
-    surveys_json= json_util.dumps(surveys)
+    surveys_json= json_util.dumps(data1)
     return surveys_json, 200
 
 @app.route('/surveys/<string:id>', methods = ['GET'])
@@ -260,6 +260,7 @@ def put_survey(id):
 
     # eliminar el cache de redis de surveys
     redis_db_service.delete_key("surveys")
+    
 
     return mongo_db_service.actualizar_encuesta(id_to_search, encuesta)
 
@@ -345,7 +346,7 @@ def post_question(id):
     # eliminar el cache del survey con el id
     redis_db_service.delete_key(f"survey_{id}")
 
-    return mongo_db_service.crear_pregunta(encuesta, pregunta)
+    return mongo_db_service.agregar_preguntas(encuesta, pregunta)
 
 @app.route('/surveys/<string:id>/questions', methods = ['GET'])
 def get_questions(id):
@@ -470,12 +471,13 @@ def get_responses(id):
     data = redis_db_service.get_key(f"responses_encuesta_{id}")
     if data is None:
         data = mongo_db_service.listar_respuestas(encuesta)
-
+                    
+        data_json = json_util.dumps(data)
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key(f"responses_encuesta_{id}", data) 
+        redis_db_service.set_key(f"responses_encuesta_{id}", data_json) 
         # setear el tiempo de expiración
         redis_db_service.set_expire(f"responses_encuesta_{id}", 120) 
-    return data
+    return data_json
 
 
 #Endpoints para los encuestados 
