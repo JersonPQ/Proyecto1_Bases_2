@@ -291,17 +291,10 @@ def create_app(test_config=None):
     #------- ANÁLISIS -----------
     @patch('db_mongo_service.MongoDatabaseService.listar_respuestas')
     def test_get_survey_analysis(self, mock_listar_respuestas):
-        """Test the analysis endpoint for a survey with valid responses."""
-        # Simula datos de respuesta que podrías esperar de la base de datos
         mock_data = {'_id': '123', 'respuestas': [{'pregunta': '¿Qué piensas?', 'respuesta': 'Es bueno'}]}
         mock_listar_respuestas.return_value = mock_data
-
-        # Realiza la llamada al endpoint
         response = self.client.get('/surveys/123/analysis')
-
-        # Comprueba que la respuesta es exitosa
         self.assertEqual(response.status_code, 200)
-        # Comprueba que la respuesta contiene los datos esperados
         self.assertEqual(json.loads(response.data), mock_data)
     return app
     
