@@ -88,16 +88,16 @@ def getUsers():
     if hasAccess[0]:
         # verificar si ya la consulta está en el cache de redis
         data = redis_db_service.get_key("users")
-        if data:
+        if data is not None:
             return data
         
         data = postgre_db_service.getUsers()
         print(token)
         
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key("users", data)
+        redis_db_service.set_key("users", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire("users", 300)
+        redis_db_service.set_expire("users", 300) 
 
         return data
     return jsonify({"message" : hasAccess[1]})
@@ -109,16 +109,16 @@ def getUser(id):
     if hasAccess[0]:
         # verificar si ya la consulta está en el cache de redis
         data = redis_db_service.get_key(f"user_{id}")
-        if data:
+        if data is not None:
             return data
         
         data = postgre_db_service.getUserId(id)
         print(token)
         
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key(f"user_{id}", data)
+        redis_db_service.set_key(f"user_{id}", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire(f"user_{id}", 300)
+        redis_db_service.set_expire(f"user_{id}", 300) 
 
         return data
     return jsonify({"message" : hasAccess[1]})
@@ -203,15 +203,15 @@ def get_surveys():
         data = mongo_db_service.listar_encuestas()
 
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key("surveys", data)
+        redis_db_service.set_key("surveys", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire("surveys", 60)
+        redis_db_service.set_expire("surveys", 60) 
 
     surveys = [survey for survey in data]
     surveys_json= json_util.dumps(surveys)
     return surveys_json, 200
 
-@app.route('/surveys/<int:id>', methods = ['GET'])
+@app.route('/surveys/<string:id>', methods = ['GET'])
 def get_survey(id):
     id_to_search = id
     # verificar si ya la consulta está en el cache de redis
@@ -220,14 +220,14 @@ def get_survey(id):
         data = mongo_db_service.detalles_encuesta(id_to_search)
 
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key(f"survey_{id}", data)
+        redis_db_service.set_key(f"survey_{id}", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire(f"survey_{id}", 60)
+        redis_db_service.set_expire(f"survey_{id}", 60) 
         
     return data
 
 #Autenticacion
-@app.route('/surveys/<int:id>', methods = ['PUT'])
+@app.route('/surveys/<string:id>', methods = ['PUT'])
 def put_survey(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
@@ -238,9 +238,9 @@ def put_survey(id):
             survey = mongo_db_service.detalles_encuesta(id)
 
             # agregar la consulta al cache de redis
-            redis_db_service.set_key(f"survey_{id}", survey)
+            redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60)
+            redis_db_service.set_expire(f"survey_{id}", 60) 
 
         if 'token' not in survey:
             return survey
@@ -260,7 +260,7 @@ def put_survey(id):
     return mongo_db_service.actualizar_encuesta(id_to_search, encuesta)
 
 #Autenticacion
-@app.route('/surveys/<int:id>', methods = ['DELETE'])
+@app.route('/surveys/<string:id>', methods = ['DELETE'])
 def delete_survey(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
@@ -271,9 +271,9 @@ def delete_survey(id):
             survey = mongo_db_service.detalles_encuesta(id)
 
             # agregar la consulta al cache de redis
-            redis_db_service.set_key(f"survey_{id}", survey)
+            redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60)
+            redis_db_service.set_expire(f"survey_{id}", 60) 
 
         if 'token' not in survey:
             return survey
@@ -292,7 +292,7 @@ def delete_survey(id):
     return mongo_db_service.eliminar_encuesta(id_to_search)
 
 #Autenticacion
-@app.route('/surveys/<int:id>/publish', methods = ['POST'])
+@app.route('/surveys/<string:id>/publish', methods = ['POST'])
 def publish_survey(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
@@ -308,7 +308,7 @@ def publish_survey(id):
     return mongo_db_service.publicar_encuesta(id_to_search)
 
 #Endpoints para las Preguntas de las Encuestas [Anthony]
-@app.route('/surveys/<int:id>/questions', methods = ['POST'])
+@app.route('/surveys/<string:id>/questions', methods = ['POST'])
 def post_question(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
@@ -343,7 +343,7 @@ def post_question(id):
 
     return mongo_db_service.crear_pregunta(encuesta, pregunta)
 
-@app.route('/surveys/<int:id>/questions', methods = ['GET'])
+@app.route('/surveys/<string:id>/questions', methods = ['GET'])
 def get_questions(id):
     encuesta= id
 
@@ -359,7 +359,7 @@ def get_questions(id):
         
     return data
 
-@app.route('/surveys/<int:id>/questions/<int:question_id>', methods = ['PUT'])
+@app.route('/surveys/<string:id>/questions/<string:question_id>', methods = ['PUT'])
 def put_question(id, question_id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
@@ -395,7 +395,7 @@ def put_question(id, question_id):
 
     return mongo_db_service.actualizar_pregunta(encuesta, pregunta, id_pregunta)
 
-@app.route('/surveys/<int:id>/questions/<int:question_id>', methods = ['DELETE'])
+@app.route('/surveys/<string:id>/questions/<string:question_id>', methods = ['DELETE'])
 def delete_question(id, question_id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
@@ -431,7 +431,7 @@ def delete_question(id, question_id):
     return mongo_db_service.eliminar_pregunta(encuesta, id_pregunta)
 
 #Endpoints para las Respuestas de las Encuestas [Anthony]
-@app.route('/surveys/<int:id>/responses', methods = ['POST'])
+@app.route('/surveys/<string:id>/responses', methods = ['POST'])
 def post_response(id):
     encuesta= id
     respuestas = request.get_json()
@@ -439,7 +439,7 @@ def post_response(id):
 
 
 #Autenticacion
-@app.route('/surveys/<int:id>/responses', methods = ['GET'])
+@app.route('/surveys/<string:id>/responses', methods = ['GET'])
 def get_responses(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
