@@ -55,6 +55,10 @@ def home():
 def register():
     user = request.json
     data = postgre_db_service.insertUser(user)
+
+    # eliminar el cache de redis de users
+    redis_db_service.delete_key("users")
+
     return data
 
 #Aqui se tiene que crear el Token y guardarlo en la cookie
@@ -97,7 +101,7 @@ def getUsers():
         # guardar la consulta en el cache de redis
         redis_db_service.set_key("users", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire("users", 300) 
+        redis_db_service.set_expire("users", 120) 
 
         return data
     return jsonify({"message" : hasAccess[1]})
@@ -118,7 +122,7 @@ def getUser(id):
         # guardar la consulta en el cache de redis
         redis_db_service.set_key(f"user_{id}", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire(f"user_{id}", 300) 
+        redis_db_service.set_expire(f"user_{id}", 120) 
 
         return data
     return jsonify({"message" : hasAccess[1]})
@@ -222,7 +226,7 @@ def get_survey(id):
         # guardar la consulta en el cache de redis
         redis_db_service.set_key(f"survey_{id}", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire(f"survey_{id}", 60) 
+        redis_db_service.set_expire(f"survey_{id}", 120) 
         
     return data
 
@@ -240,7 +244,7 @@ def put_survey(id):
             # agregar la consulta al cache de redis
             redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60) 
+            redis_db_service.set_expire(f"survey_{id}", 120) 
 
         if 'token' not in survey:
             return survey
@@ -273,7 +277,7 @@ def delete_survey(id):
             # agregar la consulta al cache de redis
             redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60) 
+            redis_db_service.set_expire(f"survey_{id}", 120) 
 
         if 'token' not in survey:
             return survey
@@ -319,9 +323,9 @@ def post_question(id):
             survey = mongo_db_service.detalles_encuesta(id)
 
             # agregar la consulta al cache de redis
-            redis_db_service.set_key(f"survey_{id}", survey)
+            redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60)
+            redis_db_service.set_expire(f"survey_{id}", 120) 
 
         if 'token' not in survey:
             return survey
@@ -353,9 +357,9 @@ def get_questions(id):
         data = mongo_db_service.listar_preguntas(encuesta)
 
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key(f"questions_encuesta_{id}", data)
+        redis_db_service.set_key(f"questions_encuesta_{id}", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire(f"questions_encuesta_{id}", 60)
+        redis_db_service.set_expire(f"questions_encuesta_{id}", 120) 
         
     return data
 
@@ -370,9 +374,9 @@ def put_question(id, question_id):
             survey = mongo_db_service.detalles_encuesta(id) 
             
             # agregar la consulta al cache de redis
-            redis_db_service.set_key(f"survey_{id}", survey)
+            redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60)
+            redis_db_service.set_expire(f"survey_{id}", 120) 
 
         if 'token' not in survey:
             return survey
@@ -406,9 +410,9 @@ def delete_question(id, question_id):
             survey = mongo_db_service.detalles_encuesta(id) 
 
             # agregar la consulta al cache de redis
-            redis_db_service.set_key(f"survey_{id}", survey)
+            redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60)
+            redis_db_service.set_expire(f"survey_{id}", 120) 
             
         if 'token' not in survey:
             return survey
@@ -450,9 +454,9 @@ def get_responses(id):
             survey = mongo_db_service.detalles_encuesta(id) 
 
             # agregar la consulta al cache de redis
-            redis_db_service.set_key(f"survey_{id}", survey)
+            redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60)
+            redis_db_service.set_expire(f"survey_{id}", 120) 
 
         if 'token' not in survey:
             return survey
@@ -468,9 +472,9 @@ def get_responses(id):
         data = mongo_db_service.listar_respuestas(encuesta)
 
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key(f"responses_encuesta_{id}", data)
+        redis_db_service.set_key(f"responses_encuesta_{id}", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire(f"responses_encuesta_{id}", 60)
+        redis_db_service.set_expire(f"responses_encuesta_{id}", 120) 
     return data
 
 
@@ -512,9 +516,9 @@ def list_respondents():
         data = postgre_db_service.get_all_respondents()
 
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key("respondents", data)
+        redis_db_service.set_key("respondents", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire("respondents", 60)
+        redis_db_service.set_expire("respondents", 120) 
     return jsonify(data), 200
 
 
@@ -535,9 +539,9 @@ def get_respondent(id):
         respondent = postgre_db_service.get_respondent_by_id(id)
 
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key(f"respondent_{id}", respondent)
+        redis_db_service.set_key(f"respondent_{id}", respondent) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire(f"respondent_{id}", 60)
+        redis_db_service.set_expire(f"respondent_{id}", 120) 
 
     if respondent:
         return jsonify(respondent), 200
@@ -604,9 +608,9 @@ def get_analisis(id):
             survey = mongo_db_service.detalles_encuesta(id) 
 
             # agregar la consulta al cache de redis
-            redis_db_service.set_key(f"survey_{id}", survey)
+            redis_db_service.set_key(f"survey_{id}", survey) 
             # setear el tiempo de expiración
-            redis_db_service.set_expire(f"survey_{id}", 60)
+            redis_db_service.set_expire(f"survey_{id}", 120) 
 
         if 'token' not in survey:
             return survey
