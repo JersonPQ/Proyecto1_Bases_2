@@ -50,34 +50,6 @@ def home():
     return 'Proyecto de Base de Datos 2024-I Semestre \n \
         Integrantes: \n\tAnthony Guevara \n\tDarío Espinoza \n\tMarbel Brenes \n\tJerson Prendas'
 
-# ENDPOINT MUESTRA DE CONSULTA A BASE DE DATOS POSTGRESQL
-@app.route('/prueba')
-def prueba():
-    data = postgre_db_service.query_prueba()
-    return data
-
-# ENDPOINT MUESTRA DE INSERCIÓN A BASE DE DATOS POSTGRESQL
-@app.route('/insertar_user', methods=['POST'])
-def insertar_user():
-    user = request.json
-    data = postgre_db_service.insertar_user(user)
-    return data
-
-@app.route('/pruebaRedis')
-def pruebaRedis():
-    data = redis_db_service.get_key("hola")
-    if data is None:
-        data = "No se encontró la llave"
-    return data
-
-@app.route('/insertarRedis', methods=['POST'])
-def insertarRedis():
-    data = request.json
-    key = data["key"]
-    value = data["value"]
-    result = redis_db_service.set_key(key, value)
-    return jsonify(result)
-
 #Endpoints para autenticación
 @app.route('/auth/register', methods = ['POST'])
 def register():
