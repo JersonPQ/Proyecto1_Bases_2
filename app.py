@@ -331,13 +331,9 @@ def list_respondents():
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
     if not hasAccess[0]:
-        survey = mongo_db_service.detalles_encuesta(id) 
-        if 'token' not in survey:
-            return survey
-        else:
-            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
-            if not hasAccess[0]:
-                return jsonify({"message" : "You don't have permission"})
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "You don't have permission"})
     respondents = postgre_db_service.get_all_respondents()
     return jsonify(respondents), 200
 
@@ -349,13 +345,9 @@ def get_respondent(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
     if not hasAccess[0]:
-        survey = mongo_db_service.detalles_encuesta(id) 
-        if 'token' not in survey:
-            return survey
-        else:
-            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
-            if not hasAccess[0]:
-                return jsonify({"message" : "You don't have permission"})
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "You don't have permission"})
     respondent = postgre_db_service.get_respondent_by_id(id)
     if respondent:
         return jsonify(respondent), 200
@@ -370,13 +362,9 @@ def update_respondent(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
     if not hasAccess[0]:
-        survey = mongo_db_service.detalles_encuesta(id) 
-        if 'token' not in survey:
-            return survey
-        else:
-            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
-            if not hasAccess[0]:
-                return jsonify({"message" : "You don't have permission"})
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "You don't have permission"})
     data = request.json
     updated_respondent = postgre_db_service.update_respondent(id, data)
     if updated_respondent:
@@ -392,13 +380,9 @@ def delete_respondent(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
     if not hasAccess[0]:
-        survey = mongo_db_service.detalles_encuesta(id) 
-        if 'token' not in survey:
-            return survey
-        else:
-            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
-            if not hasAccess[0]:
-                return jsonify({"message" : "You don't have permission"})
+        hasAccess = Security.verifyToken({"token" : token, "userType" : 2})
+        if not hasAccess[0]:
+            return jsonify({"message" : "You don't have permission"})
     result = postgre_db_service.delete_respondent(id)
     if result:
         return '', 204
@@ -409,5 +393,15 @@ def delete_respondent(id):
 #Endpoint para los Reportes y Análisis [Dario - Preguntar acerca del analisis al profe]
 @app.route('/surveys/<int:id>/analysis')
 def get_analisis(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
     encuesta= id
     return mongo_db_service.listar_respuestas(encuesta)
