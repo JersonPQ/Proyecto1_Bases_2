@@ -137,7 +137,7 @@ def getUser(id):
 def putUser(id):
     token = request.cookies.get("token")
     userType = request.cookies.get("userType")
-    if userType == 1:  
+    if userType == "1":  
         hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
     else:
         # verificar si ya la consulta está en el cache de redis
@@ -211,15 +211,16 @@ def get_surveys():
     data = redis_db_service.get_key("surveys")
     if data is None:
         data = mongo_db_service.listar_encuestas()
-        data1 = [{**survey, '_id': str(survey['_id'])} for survey in data]
+        data = [{**survey, '_id': str(survey['_id'])} for survey in data]
 
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key("surveys", data1) 
+        redis_db_service.set_key("surveys", data) 
         # setear el tiempo de expiración
         redis_db_service.set_expire("surveys", 60) 
 
-    surveys_json= json_util.dumps(data1)
-    return surveys_json, 200
+        data= json_util.dumps(data)
+
+    return data, 200
 
 @app.route('/surveys/<string:id>', methods = ['GET'])
 def get_survey(id):
@@ -316,6 +317,13 @@ def publish_survey(id):
             if not hasAccess[0]:
                 return jsonify({"message" : "You don't have permission"})
     id_to_search = id
+
+    # eliminar el cache de redis del survey con el id
+    redis_db_service.delete_key(f"survey_{id}")
+
+    # eliminar el cache de redis de surveys
+    redis_db_service.delete_key("surveys")
+
     return mongo_db_service.publicar_encuesta(id_to_search)
 
 #Endpoints para las Preguntas de las Encuestas [Anthony]
@@ -446,6 +454,10 @@ def delete_question(id, question_id):
 def post_response(id):
     encuesta= id
     respuestas = request.get_json()
+
+    # eliminar el cache de redis de responses_encuesta con el id
+    redis_db_service.delete_key(f"responses_encuesta_{id}")
+
     return mongo_db_service.enviar_respuestas(encuesta, respuestas)
 
 
@@ -478,12 +490,13 @@ def get_responses(id):
     if data is None:
         data = mongo_db_service.listar_respuestas(encuesta)
                     
-        data_json = json_util.dumps(data)
         # guardar la consulta en el cache de redis
-        redis_db_service.set_key(f"responses_encuesta_{id}", data_json) 
+        redis_db_service.set_key(f"responses_encuesta_{id}", data) 
         # setear el tiempo de expiración
-        redis_db_service.set_expire(f"responses_encuesta_{id}", 120) 
-    return data_json
+        redis_db_service.set_expire(f"responses_encuesta_{id}", 120)
+
+        data = json_util.dumps(data)
+    return data
 
 
 #Endpoints para los encuestados 
@@ -605,7 +618,7 @@ def delete_respondent(id):
 
 
 #Endpoint para los Reportes y Análisis [Dario - Preguntar acerca del analisis al profe]
-@app.route('/surveys/<int:id>/analysis')
+@app.route('/surveys/<string:id>/analysis')
 def get_analisis(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})

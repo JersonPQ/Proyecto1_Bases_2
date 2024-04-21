@@ -4,7 +4,6 @@ import unittest
 from flask import Flask, jsonify, request, make_response
 from db_postgre_service import PostgreDatabaseService
 from db_mongo_service import MongoDatabaseService
-from flask import Flask
 from db_mongo_service import MongoDatabaseService
 import os
 from Security import Security
