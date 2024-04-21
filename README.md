@@ -98,6 +98,27 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
 
 3. **[PUT] /users/{id}**
 
+    Actualiza los datos de una usuario. Se requiere pasar por la ruta el parametro **id**. Se necesitan 2 datos para poder ingresar (name, password).
+
+    * **name:** Nombre de usuario - String.
+    * **password:** Contraseña del usuario - String.
+    * **id:** Este es el id que esta asignado a los usuarios en la base de datos, es el identificador único - INT.
+
+    * Ejemplo de peticion
+
+    ```
+    [PUT] http://127.0.0.1:5000/users/1
+    ```
+
+    * Formato de entrada de información (Ejemplo)
+
+    ```
+    {
+      "name" : "Dario1",
+      "password" : "myPassword2",
+    }
+    ```
+
 4. **[DELETE] /users/{id}**
 
     Elimina permanentemente un usuario de la base de datos. Se requiere pasar por la ruta el parametro **id**. **Se necesita permiso de administrador para utiliza esta funcionalidad.**
@@ -113,6 +134,59 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
 
 1. **[POST] /surveys**
 
+    Crea una nueva encuesta. Se necesita autorización de creador de encuestas o de administrador.
+
+    * Ejemplo de peticion
+
+    ```
+    [POST] http://127.0.0.1:5000/surveys
+    ```
+
+    * Formato de entrada de información (Ejemplo)
+
+    ```
+    {
+    "titulo": "Encuesta cliente",
+    "descripcion": "Por favor, tómese un momento para completar esta encuesta y ayúdenos a mejorar nuestros servicios.",
+    "preguntas": [
+        {
+        "id_pregunta": "1",
+        "pregunta": "¿Cuál es su nivel de satisfacción con nuestro producto/servicio?",
+        "opciones": [
+            "Muy satisfecho",
+            "Satisfecho",
+            "Neutral",
+            "Insatisfecho",
+            "Muy insatisfecho"
+        ]
+        },
+        {
+        "id_pregunta": "2",
+        "pregunta": "¿Con qué frecuencia utiliza nuestro producto/servicio?",
+        "opciones": [
+            "Diariamente",
+            "Semanalmente",
+            "Mensualmente",
+            "Ocasionalmente",
+            "Nunca"
+        ]
+        },
+        {
+        "id_pregunta": "3",
+        "pregunta": "¿Recomendaría nuestro producto/servicio a otros?",
+        "opciones": [
+            "Definitivamente sí",
+            "Probablemente sí",
+            "No estoy seguro",
+            "Probablemente no",
+            "Definitivamente no"
+        ]
+        }
+    ],
+    "publicada": false,
+    "respuestas": []
+    }
+    ```
 2. **[GET] /surveys**
 
     Genera una lista con la información de todas las encuestas que se encuentran publicas en es respectivo momento.
@@ -134,6 +208,61 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
     [GET] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4
     ```
 4. **[PUT] /surveys/{id}**
+
+    Actuliza una encuesta dependiendo del id de esta. Se requiere pasar por la ruta el párameto **id**. **Se necesita token de autorización de administrado o del creador de la encuesta.**
+
+    * **id**: Este es el id que esta asignado a las encuestas en la base de datos - STRING.
+
+    * Ejemplo de peticion
+
+    ```
+    [PUT] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4
+    ```
+    * Formato de entrada de información (Ejemplo)
+
+    ```
+    {
+    "titulo": "Encuesta cliente actulizada",
+    "descripcion": "Por favor, tómese un momento para completar esta encuesta y ayúdenos a mejorar nuestros servicios.",
+    "preguntas": [
+        {
+        "id_pregunta": "1",
+        "pregunta": "¿Cuál es su nivel de satisfacción con nuestro producto/servicio?",
+        "opciones": [
+            "Muy satisfecho",
+            "Satisfecho",
+            "Neutral",
+            "Insatisfecho",
+            "Muy insatisfecho"
+        ]
+        },
+        {
+        "id_pregunta": "2",
+        "pregunta": "¿Con qué frecuencia utiliza nuestro producto/servicio?",
+        "opciones": [
+            "Diariamente",
+            "Semanalmente",
+            "Mensualmente",
+            "Ocasionalmente",
+            "Nunca"
+        ]
+        },
+        {
+        "id_pregunta": "3",
+        "pregunta": "¿Recomendaría nuestro producto/servicio a otros?",
+        "opciones": [
+            "Definitivamente sí",
+            "Probablemente sí",
+            "No estoy seguro",
+            "Probablemente no",
+            "Definitivamente no"
+        ]
+        }
+    ],
+    "publicada": false,
+    "respuestas": []
+    }
+    ```
 
 5. **[DELETE] /surveys/{id}**
 
@@ -163,6 +292,29 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
 
 1. **[POST] /surveys/{id}/questions**
 
+    Crea una nueva pregunta en una encuesta ya existente. Se requiere pasar por la ruta el párameto **id**. **Se necesita token de autorización de administrado o del creador de la encuesta.**
+
+    * **id**: Este es el id que esta asignado a las encuestas en la base de datos - STRING. 
+
+    * Ejemplo de peticion
+
+    ```
+    [POST] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4/questions
+    ```  
+
+    * Formato de entrada de información (Ejemplo)
+
+    ```
+    {"id_pregunta": "4",
+        "opciones": [
+            "Definitivamente si",
+            "Probablemente sí",
+            "No estoy seguro",
+            "Probablemente no",
+            "Definitivamente no"
+        ],
+        "pregunta": "¿sera que si inserta?"}
+    ```
 2. **[GET] /surveys/{id}/questions**
 
     Muestra en una lista las preguntas de una encuesta específica. Se requiere pasar por la ruta el párameto **id**. **Se necesita token de autorización de administrado o del creador de la encuesta.**
@@ -176,22 +328,80 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
     ```  
 3. **[PUT] /surveys/{id}/questions/{questionId}**
 
+    Actuliza una pregunta de una encuesta ya existente. Se requiere pasar por la ruta los párametros **id** y **questionId**. **Se necesita token de autorización de administrado o del creador de la encuesta.**
+
+    * **id**: Este es el id que esta asignado a las encuestas en la base de datos - STRING.  
+
+    * **questionId**: Este es el id que esta adignado a cada pregunta de una encuesta en la base de datos - INT.
+
+    * Ejemplo de peticion
+
+    ```
+    [PUT] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4/questions/1
+    ```  
+
+    * Formato de entrada de información (Ejemplo)
+
+    ```
+    {"id_pregunta": "4",
+        "opciones": [
+            "Definitivamente si Y MAS",
+            "Probablemente sí",
+            "No estoy seguro",
+            "Probablemente no",
+            "Definitivamente no"
+        ],
+        "pregunta": "¿sera que si inserta?"}
+    ```
+
 4. **[DELETE] /surveys/{id}/questions/{questionId}**
 
     Elimina permanentemente de la base de datos una pregunta específica de una encuesta en específico. Se requiere pasar por la ruta los párametros **id** y **questionId**. **Se necesita token de autorización de administrado o del creador de la encuesta.** 
 
     * **id**: Este es el id que esta asignado a las encuestas en la base de datos - STRING.  
 
-    * **questionId**: Este es el id que esta adignado a cada pregunta de una encuesta en la base de datos - STRING.
+    * **questionId**: Este es el id que esta adignado a cada pregunta de una encuesta en la base de datos - INT.
 
     * Ejemplo de petición
 
     ```
-    [DELETE] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4/questions/dfvcsdxa428csW5SvEvfdv4
+    [DELETE] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4/questions/1
     ```    
 
 #### Endpoint de Respuestas de Encuestas
 1. **[POST] /surveys/{id}/responses**
+
+    Genera una respuesta para una encuesta ya existente. Se requiere pasar por la ruta el párameto **id**.
+
+    * **id**: Este es el id que esta asignado a las encuestas en la base de datos - STRING. 
+
+    * Ejemplo de petición
+
+    ```
+    [POST] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4/responses
+    ```   
+
+    * Formato de entrada de información (Ejemplo)
+
+    ```
+    {
+    "user_id": "1",
+    "respuestas": [
+        {
+        "pregunta_id": "1",
+        "respuesta": "Muy satisfecho"
+        },
+        {
+        "pregunta_id": "2",
+        "respuesta": "Perro"
+        },
+        {
+        "pregunta_id": "3",
+        "respuesta": "Definitivamente sí"
+        }
+    ]
+    }
+    ```
 
 2. **[GET] /surveys/{id}/responses**
 
@@ -206,6 +416,23 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
     ```   
 #### Endpoint de Encuestados
 1. **[POST] /respondents**
+
+    Registra un nuevo encuestado, es necesario para generar una respuesta a una encuesta. 
+
+    * Ejemplo de petición
+
+    ```
+    [POST] http://127.0.0.1:5000/respondents
+    ``` 
+
+    * Formato de entrada de información (Ejemplo)
+
+    ```
+    {
+    "email":"jorgevargas@example.com",
+    "name": "Jorge Vargas"
+    }
+    ```
 
 2. **[GET] /respondents**
 
@@ -229,6 +456,25 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
 
 4. **[PUT] /respondents/{id}**
 
+    Actualiza la información de un encuestado ya existente. Se requiere pasar por la ruta el parametro **id**. **Se necesita token de autorización de administrado.**
+
+    * **id:** Este es el id que esta asignado a los encuestados en la base de datos, es el identificador único - INT.
+
+    * Ejemplo de petición
+
+    ```
+    [PUT] http://127.0.0.1:5000/respondents
+    ``` 
+
+    * Formato de entrada de información (Ejemplo)
+
+    ```
+    {
+    "email":"jorgevargas@example.com",
+    "name": "Jorge Vargas Vargas"
+    }
+    ```
+
 5. **[DELETE] /respondents/{id}**
 
     Eliminar permanentemente la información de un usuario en específico. Se requiere pasar por la ruta el parametro **id**. **Se necesita token de autorización de administrado.**
@@ -251,3 +497,5 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
     ```
     [GET] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4/analysis
     ``` 
+
+### 3. Pruebas
