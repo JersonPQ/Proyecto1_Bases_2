@@ -14,6 +14,8 @@ from db_redis_service import RedisDBService
 
 from bson import json_util
 
+from kafka_service import KafkaService
+
 POSTGRES_DB_HOST = os.getenv('POSTGRES_DB_HOST')
 POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
 POSTGRES_DB_USER = os.getenv('POSTGRES_DB_USER')
@@ -27,6 +29,8 @@ MONGO_DB_PASSWORD = os.getenv('MONGO_DB_PASSWORD', 'default_password')
 
 REDIS_DB_HOST = os.getenv('REDIS_DB_HOST')
 REDIS_DB_PORT = int(os.getenv('REDIS_DB_PORT'))
+
+KAFKA_BROKER = os.getenv('KAFKA_BROKER')
 
 # Conexion a las bases de datos
 postgre_db = PostgreDatabase(database=POSTGRES_DB_NAME, host=POSTGRES_DB_HOST,
@@ -44,6 +48,9 @@ app = Flask(__name__)
 postgre_db_service = PostgreDatabaseService(database=postgre_db)
 mongo_db_service = MongoDatabaseService(database=mongo_db)
 redis_db_service = RedisDBService(redis_databse=redis_db)
+
+# Servicio de Kafka
+kafka_service = KafkaService(database=mongo_db_service, kafka_broker=KAFKA_BROKER)
 
 @app.route('/')
 def home():

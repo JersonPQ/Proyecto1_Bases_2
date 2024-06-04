@@ -1,4 +1,5 @@
 import json
+import datetime
 from bson import ObjectId
 from pymongo import MongoClient
 
@@ -7,6 +8,10 @@ class MongoDB:
         self.client = MongoClient(host=host, port=port, username=usernamen, password=password)
         self.db = self.client["encuestas"]
         self.respuestas_collection = self.db["respuestas"]
+        self.kafka_collection = self.db["kafka"]
+
+        # indexar el campo de topic en la coleccion de kafka
+        # self.kafka_collection.create_index("topic")
         
     # ----------------- Consultas de Encuestas ----------------- #
     #Crear una nueva encuesta
@@ -152,3 +157,20 @@ class MongoDB:
             return survey.get("respuestas", [])
         else:
             return ["message", "Encuesta no encontrada"]
+        
+
+    #----------------- Funciones de Kafka ----------------- #
+    #Enviar un mensaje a Kafka
+    def guardar_mensaje_kafka(self, topic: str, author: str, mensaje: dict) -> dict:
+        mensaje_kafka = {
+            "timestamp": datetime.datetime.now(),
+            "topic": topic,
+            "author": author,
+            "message": mensaje
+        }
+        return self.kafka_collection.insert_one(mensaje_kafka)
+    
+    #Listar todos los mensajes de Kafka por canal
+    def listar_mensajes_kafka(self, topic: str) -> list:
+        mensajes = self.kafka_collection.find({"topic": topic}).sort("timestamp", -1)
+        return list(mensajes)

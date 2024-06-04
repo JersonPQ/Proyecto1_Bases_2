@@ -12,6 +12,8 @@ ENV POSTGRES_DB_PORT=5432
 ENV REDIS_DB_HOST='redis'
 ENV REDIS_DB_PORT=6379
 
+ENV KAFKA_BROKER='kafka:29092'
+
 # Set the working directory
 WORKDIR /opt/app
 

@@ -42,3 +42,11 @@ class MongoDatabaseService:
     
     def listar_respuestas(self, id: str) -> list:
         return self.database.listar_respuestas(id)
+    
+
+    # ----------------- Funciones de Kafka ----------------- #
+    def guardar_mensaje_kafka(self, topic: str, autor: str, message: dict) -> None:
+        return self.database.guardar_mensaje_kafka(topic, autor, message)
+    
+    def listar_mensajes_kafka(self, topic: str) -> list:
+        return self.database.listar_mensajes_kafka(topic)
