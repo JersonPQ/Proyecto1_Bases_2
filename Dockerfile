@@ -14,6 +14,10 @@ ENV REDIS_DB_PORT=6379
 
 ENV KAFKA_BROKER='kafka:29092'
 
+ENV NEO4J_USER='neo4j'
+ENV NEO4J_PASSWORD='password'
+ENV NEO4J_PORT=7999
+
 # Set the working directory
 WORKDIR /opt/app
 

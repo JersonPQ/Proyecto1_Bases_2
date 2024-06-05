@@ -99,7 +99,6 @@ class PostgreDatabase:
         return deleted_rows > 0
 # ------------------ MÉTODOS ENCUESTADOS --------------
 
-
     #Insertar encuestado
     def insert_respondent(self, respondent_data):
         cursor = self.conn.cursor()

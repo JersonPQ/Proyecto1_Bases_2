@@ -28,7 +28,7 @@ MONGO_DB_USER = os.getenv('MONGO_DB_USER', 'default_user')
 MONGO_DB_PASSWORD = os.getenv('MONGO_DB_PASSWORD', 'default_password')
 
 REDIS_DB_HOST = os.getenv('REDIS_DB_HOST')
-REDIS_DB_PORT = int(os.getenv('REDIS_DB_PORT'))
+REDIS_DB_PORT = os.getenv('REDIS_DB_PORT')
 
 KAFKA_BROKER = os.getenv('KAFKA_BROKER')
 
