@@ -16,6 +16,9 @@ from bson import json_util
 
 from kafka_service import KafkaService
 
+from db_neo4j import Neo4jDataBase
+from db_neo4j_service import Neo4jDataBaseService
+
 POSTGRES_DB_HOST = os.getenv('POSTGRES_DB_HOST')
 POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
 POSTGRES_DB_USER = os.getenv('POSTGRES_DB_USER')
@@ -32,6 +35,11 @@ REDIS_DB_PORT = os.getenv('REDIS_DB_PORT')
 
 KAFKA_BROKER = os.getenv('KAFKA_BROKER')
 
+NEO4J_USER = os.getenv('NEO4J_USER')
+NEO4J_PASSWORD = os.getenv('NEO4J_PASSWORD')
+NEO4J_PORT = os.getenv('NEO4J_PORT')
+
+
 # Conexion a las bases de datos
 postgre_db = PostgreDatabase(database=POSTGRES_DB_NAME, host=POSTGRES_DB_HOST,
                                 user=POSTGRES_DB_USER, password=POSTGRES_DB_PASSWORD,
@@ -41,6 +49,8 @@ mongo_db = MongoDB(host=MONGO_DB_HOST, port=MONGO_DB_PORT, usernamen=MONGO_DB_US
 
 redis_db = RedisDB(host=REDIS_DB_HOST, port=REDIS_DB_PORT)
 
+neo4j_db = Neo4jDataBase(user=NEO4J_USER, password=NEO4J_PASSWORD, port=NEO4J_PORT)
+
 # Creación de la aplicación
 app = Flask(__name__)
 
@@ -48,9 +58,11 @@ app = Flask(__name__)
 postgre_db_service = PostgreDatabaseService(database=postgre_db)
 mongo_db_service = MongoDatabaseService(database=mongo_db)
 redis_db_service = RedisDBService(redis_databse=redis_db)
+neo4j_db_service = Neo4jDataBaseService(database=neo4j_db)
 
 # Servicio de Kafka
 kafka_service = KafkaService(database=mongo_db_service, kafka_broker=KAFKA_BROKER)
+
 
 @app.route('/')
 def home():
@@ -65,6 +77,8 @@ def register():
         return jsonify({'message' : 'Faltan datos para realizar esta consulta.'})
     data = postgre_db_service.insertUser(user)
 
+    #Insertar datos a Neo4j
+    data = neo4j_db_service.insertUser(user)
     # eliminar el cache de redis de users
     redis_db_service.delete_key("users")
 

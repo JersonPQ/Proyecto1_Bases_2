@@ -128,7 +128,7 @@ services:
       - 7999:7687
     restart: always
     environment:
-      - NEO4J_AUTH=neo4j/password
+      - NEO4J_AUTH=neo4j/Kzds1234
     volumes:
       - ./db/data:/data
       - ./db/conf:/conf

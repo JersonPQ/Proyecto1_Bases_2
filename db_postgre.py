@@ -52,6 +52,7 @@ class PostgreDatabase:
         cursor.execute(query, (user['name'], user['password'], user['userRol']))
         self.conn.commit()
 
+
         cursor.close()
 
         return user
