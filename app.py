@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, request, make_response, jsonify
+from flask import Flask, request, make_response, jsonify, redirect
 from Security import Security
 
 from db_postgre import PostgreDatabase
@@ -655,3 +655,11 @@ def get_analisis(id):
                 return jsonify({"message" : "You don't have permission"})
     encuesta= id
     return mongo_db_service.listar_respuestas(encuesta)
+#Endpoint para el Dashboard 
+@app.route('/dashboard-url')
+def dashboard_url():
+    dashboard_url = 'http://localhost:8088/superset/dashboard/p/LB6GwBBYXVm/'
+    return jsonify({'dashboard_url': dashboard_url})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
