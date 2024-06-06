@@ -38,6 +38,7 @@ services:
       - spark-master
       - spark-worker-a
       - spark-worker-b
+      - superset
 
     volumes:
       - .:/opt/app
@@ -45,17 +46,14 @@ services:
     command: poetry run python3 -m flask --app app.py --debug run --host=0.0.0.0
 
   postgredb:
-    
     image: postgres
     restart: always
     ports:
       - 5432:5432
     networks:
       - web
-
     environment:
       POSTGRES_PASSWORD: postgres
-    
     volumes:
       - ./database/postgre/:/docker-entrypoint-initdb.d/
   
@@ -64,10 +62,8 @@ services:
     restart: always
     ports:
       - 27017:27017
-
     networks:
       - web
-    
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -77,10 +73,8 @@ services:
     restart: always
     ports:
       - 8081:8081
-
     networks:
       - web
-
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
@@ -91,11 +85,8 @@ services:
     restart: always
     ports:
       - 6379:6379
-
     networks:
       - web
-  
-# kafka
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -126,8 +117,6 @@ services:
       - '9092:9092'
     networks:
       - web
-
-# spark
 
   spark-master:
     image: bitnami/spark:latest
@@ -162,6 +151,25 @@ services:
     depends_on:
       - spark-master
 
+  superset:
+    build:
+      context: .
+      dockerfile: Dockerfile.superset
+    restart: always
+    ports:
+      - 8088:8088
+    environment:
+      SUPERSET_LOAD_EXAMPLES: 'no'
+      SUPERSET_SECRET_KEY: 'thisISaSECRET_1234'
+      SQLALCHEMY_DATABASE_URI: 'postgresql://postgres:postgres@postgredb:5432/encuesta'
+    networks:
+      - web
+    depends_on:
+      - postgredb
+
 networks:
   web:
     driver: bridge
+
+volumes:
+  postgres_data:
