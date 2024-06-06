@@ -23,7 +23,8 @@ services:
 
       KAFKA_BROKER: kafka:29092
 
-      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+      KAFKA_TOPIC_SPARK: spark
+
     ports:
       - 5000:5000
     
@@ -34,10 +35,8 @@ services:
       - postgredb
       - mongo
       - redis
+      - zookeeper
       - kafka
-      - spark-master
-      - spark-worker-a
-      - spark-worker-b
 
     volumes:
       - .:/opt/app
@@ -99,6 +98,7 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
     restart: always
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -110,13 +110,14 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:latest
+    container_name: kafka
     restart: always
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:29092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:29092,LISTENER_DOCKER_EXTERNAL://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -126,41 +127,6 @@ services:
       - '9092:9092'
     networks:
       - web
-
-# spark
-
-  spark-master:
-    image: bitnami/spark:latest
-    restart: always
-    environment:
-      - SPARK_MODE=master
-    ports:
-      - 8080:8080
-      - 7077:7077
-    networks:
-      - web
-
-  spark-worker-a:
-    image: bitnami/spark:latest
-    restart: always
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-    networks:
-      - web
-    depends_on:
-      - spark-master
-
-  spark-worker-b:
-    image: bitnami/spark:latest
-    restart: always
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-    networks:
-      - web
-    depends_on:
-      - spark-master
 
 networks:
   web:

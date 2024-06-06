@@ -1,8 +1,16 @@
 from db_mongo import MongoDB
+from kafka_service_for_spark import KafkaProducerSparkService
+import os
+
+KAFKA_BROKER_SPARK = os.getenv("KAFKA_BROKER")
+KAFKA_TOPIC_SPARK = os.getenv("KAFKA_TOPIC_SPARK")
 
 class MongoDatabaseService:
     def __init__(self, database: MongoDB) -> None:
         self.database = database
+        # Servicio de Kafka para Spark
+        self.kafka_service_for_spark = KafkaProducerSparkService(kafka_broker=KAFKA_BROKER_SPARK, topic=KAFKA_TOPIC_SPARK)
+        self.topic_spark = KAFKA_TOPIC_SPARK
     
     # ----------------- Consultas Encuestas ----------------- #
     def crear_encuesta(self, encuesta: dict, token: int) -> dict:
@@ -38,8 +46,14 @@ class MongoDatabaseService:
     
     # ----------------- Consultas Respuestas ----------------- #
     def enviar_respuestas(self, id: str, respuestas: list) -> dict:
-        return self.database.enviar_respuestas(id, respuestas)
-    
+        # Enviar respuestas a Spark
+        try:
+            return_database = self.database.enviar_respuestas(id, respuestas)
+            self.kafka_service_for_spark.enviar_mensaje(self.topic_spark, respuestas)
+            return return_database
+        except Exception as e:
+            return {"error": str(e)}
+
     def listar_respuestas(self, id: str) -> list:
         return self.database.listar_respuestas(id)
     

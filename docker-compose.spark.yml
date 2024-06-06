@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # app
+  app-spark:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    restart: always
+    environment:
+      KAFKA_BROKER_SPARK_EXTERNAL: localhost:9092
+      KAFKA_TOPIC_SPARK: spark
+
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+    ports:
+      - 5001:5001
+    networks:
+      - web
+    depends_on:
+      - spark-master
+      - spark-worker-a
+      - spark-worker-b
+    volumes:
+      - .:/opt/app
+    
+    command: poetry run python3 spark.py
+
+  # spark
+
+  spark-master:
+    image: bitnami/spark:latest
+    restart: always
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - 8080:8080
+      - 7077:7077
+    networks:
+      - web
+
+  spark-worker-a:
+    image: bitnami/spark:latest
+    restart: always
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2G
+    networks:
+      - web
+    depends_on:
+      - spark-master
+
+  spark-worker-b:
+    image: bitnami/spark:latest
+    restart: always
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2G
+    networks:
+      - web
+    depends_on:
+      - spark-master
+
+networks:
+  web:
+    driver: bridge
