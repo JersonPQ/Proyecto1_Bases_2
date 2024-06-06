@@ -20,7 +20,6 @@ CREATE TABLE responses (
 CREATE TABLE trends (
     id SERIAL PRIMARY KEY,
     survey_id INT REFERENCES surveys(id),
-    tendencia TEXT,
     score FLOAT,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -51,10 +50,10 @@ VALUES
 (2, 'user_12', '{"q1": "Muy satisfecho", "q2": "Sí"}');
 
 
-INSERT INTO trends (survey_id, tendencia, score)
+INSERT INTO trends (survey_id, score)
 VALUES 
-(1, 'Satisfacción General', 4.5),
-(2, 'Preferencia por el Producto A', 3.8),
-(3, 'Calidad del Servicio', 4.2),
-(4, 'Uso de Facebook', 4.7),
-(5, 'Consumo de Frutas', 0);
+(1, 4.5),
+(2, 3.8),
+(3, 4.2),
+(4, 4.7),
+(5, 0);

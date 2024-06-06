@@ -658,7 +658,7 @@ def get_analisis(id):
 #Endpoint para el Dashboard 
 @app.route('/dashboard-url')
 def dashboard_url():
-    dashboard_url = 'http://localhost:8088/superset/dashboard/p/LB6GwBBYXVm/'
+    dashboard_url = 'http://localhost:8088/superset/dashboard/p/w41lv7en7Xp/'
     return jsonify({'dashboard_url': dashboard_url})
 
 if __name__ == '__main__':

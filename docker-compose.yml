@@ -12,24 +12,18 @@ services:
       POSTGRES_DB_NAME: encuesta
       POSTGRES_DB_HOST: postgredb
       POSTGRES_DB_PORT: 5432
-
       MONGO_DB_USER: root
       MONGO_DB_PASSWORD: example
       MONGO_DB_HOST: mongo
       MONGO_DB_PORT: 27017
-
       REDIS_HOST: redis
       REDIS_PORT: 6379
-
       KAFKA_BROKER: kafka:29092
-
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     ports:
       - 5000:5000
-    
     networks:
       - web
-
     depends_on:
       - postgredb
       - mongo
@@ -39,10 +33,8 @@ services:
       - spark-worker-a
       - spark-worker-b
       - superset
-
     volumes:
       - .:/opt/app
-
     command: poetry run python3 -m flask --app app.py --debug run --host=0.0.0.0
 
   postgredb:
@@ -56,7 +48,8 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - ./database/postgre/:/docker-entrypoint-initdb.d/
-  
+      - postgres_data:/var/lib/postgresql/data  # Persist data
+
   mongo:
     image: mongo
     restart: always
@@ -67,7 +60,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    
+
   mongo-express:
     image: mongo-express
     restart: always
@@ -166,6 +159,10 @@ services:
       - web
     depends_on:
       - postgredb
+    volumes:
+      - superset_home:/app/superset_home  # Persist data
+      - superset_config:/app/superset_config  # Persist config
+    entrypoint: ["/bin/bash", "-c", "/docker-init.sh && /app/import_dashboards.sh && /app/docker-init.sh"]
 
 networks:
   web:
@@ -173,3 +170,5 @@ networks:
 
 volumes:
   postgres_data:
+  superset_home:
+  superset_config:
