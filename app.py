@@ -16,6 +16,9 @@ from bson import json_util
 
 from kafka_service import KafkaService
 
+import findspark
+from pyspark.sql import SparkSession
+
 POSTGRES_DB_HOST = os.getenv('POSTGRES_DB_HOST')
 POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
 POSTGRES_DB_USER = os.getenv('POSTGRES_DB_USER')
@@ -51,6 +54,10 @@ redis_db_service = RedisDBService(redis_databse=redis_db)
 
 # Servicio de Kafka
 kafka_service = KafkaService(database=mongo_db_service, kafka_broker=KAFKA_BROKER)
+
+# Inicializar el servicio de Spark
+findspark.init()
+spark = SparkSession.builder.master("spark://spark-master:7077").getOrCreate()
 
 @app.route('/')
 def home():

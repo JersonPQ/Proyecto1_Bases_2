@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   app:
@@ -20,6 +20,10 @@ services:
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
+
+      KAFKA_BROKER: kafka:29092
+
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     ports:
       - 5000:5000
     
@@ -31,6 +35,9 @@ services:
       - mongo
       - redis
       - kafka
+      - spark-master
+      - spark-worker-a
+      - spark-worker-b
 
     volumes:
       - .:/opt/app
@@ -119,6 +126,41 @@ services:
       - '9092:9092'
     networks:
       - web
+
+# spark
+
+  spark-master:
+    image: bitnami/spark:latest
+    restart: always
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - 8080:8080
+      - 7077:7077
+    networks:
+      - web
+
+  spark-worker-a:
+    image: bitnami/spark:latest
+    restart: always
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    networks:
+      - web
+    depends_on:
+      - spark-master
+
+  spark-worker-b:
+    image: bitnami/spark:latest
+    restart: always
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    networks:
+      - web
+    depends_on:
+      - spark-master
 
 networks:
   web:

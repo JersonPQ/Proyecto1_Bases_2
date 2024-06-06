@@ -17,6 +17,8 @@ pytz = "^2024.1"
 pytest = "^8.1.1"
 kafka-python = "^2.0.2"
 six = "^1.16.0"
+findspark = "^2.0.1"
+pyspark = "^3.5.1"
 
 
 [build-system]
