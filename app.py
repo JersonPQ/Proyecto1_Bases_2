@@ -655,3 +655,52 @@ def get_analisis(id):
                 return jsonify({"message" : "You don't have permission"})
     encuesta= id
     return mongo_db_service.listar_respuestas(encuesta)
+
+#Endpoints kafka
+#Inicia sesión colaborativa
+@app.route('/surveys/<string:id>/edit/start', methods = ['POST'])
+def start_session(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
+    id_to_search = id
+    return kafka_service.start_session(id_to_search)
+
+#Envia cambios al sistema
+@app.route('/surveys/<string:id>/edit/submit', methods = ['POST'])
+def submit_changes(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
+    id_to_search = id
+    return kafka_service.submit_changes(id_to_search)
+
+#Consulta el estado de los cambios
+@app.route('/surveys/<string:id>/edit/status', methods = ['GET'])
+def get_status(id):
+    token = request.cookies.get("token")
+    hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
+    if not hasAccess[0]:
+        survey = mongo_db_service.detalles_encuesta(id) 
+        if 'token' not in survey:
+            return survey
+        else:
+            hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
+            if not hasAccess[0]:
+                return jsonify({"message" : "You don't have permission"})
+    id_to_search = id
+    return kafka_service.get_status(id_to_search)

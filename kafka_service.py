@@ -35,3 +35,22 @@ class KafkaService:
     
     def listar_topics(self) -> list:
         return self.topics
+    
+#Kafka endpoints
+#inicializar sesion de edicion de encuesta
+    def start_session(self, survey_id: str):
+        topic = f"survey_{survey_id}_edit"
+        if topic not in self.topics:
+            self.escuchar_mensajes(topic)
+        return topic
+    
+#enviar cambios al sistema
+    def submit_changes(self, survey_id: str, cambios: dict, autor: str):
+        topic = f"survey_{survey_id}_edit"
+        self.enviar_mensaje(topic, autor, cambios)
+
+#Consulta el estado de los cambios
+    def get_status(self, survey_id: str):
+        topic = f"survey_{survey_id}_edit"
+        return self.listar_mensajes(topic)
+    
