@@ -1,0 +1,32 @@
+FROM python:3.11
+
+ENV KAFKA_BROKER_SPARK='kafka:29092'
+
+ENV KAFKA_TOPIC_SPARK_RESPONSES='sparkResponses'
+
+ENV KAFKA_TOPIC_SPARK_SURVEYS='sparkSurveys'
+
+# Set the working directory
+WORKDIR /opt/app
+
+COPY . .
+
+# Install Poetry
+RUN pip install poetry
+# Install dependencies
+RUN poetry install
+
+# Instalar Java 17
+
+RUN apt-get update && apt-get install -y openjdk-17-jre
+
+ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-amd64'
+
+# Create a volume
+VOLUME /data_store
+
+# Expose the port
+EXPOSE 5000
+
+# Run the application
+CMD ["poetry", "run", "python3", "spark.py"]
