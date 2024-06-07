@@ -5,6 +5,11 @@ class KafkaProducerSparkService:
         self.producer = KafkaProducer(bootstrap_servers=[kafka_broker])
         self.topic = topic
     
-    def enviar_mensaje(self, topic: str, mensaje: str) -> None:
-        self.producer.send(topic, mensaje.encode('utf-8'))
-        self.producer.flush()
+    def enviar_mensaje(self, topic: str, mensaje: str) -> dict:
+        try:
+            self.producer.send(topic, mensaje.encode('utf-8'))
+            self.producer.flush()
+
+            return {"message": "Mensaje enviado correctamente"}
+        except Exception as e:
+            return {"error": str(e)}

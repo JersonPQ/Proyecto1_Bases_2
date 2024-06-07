@@ -8,8 +8,9 @@ services:
       dockerfile: Dockerfile.spark
     restart: always
     environment:
-      KAFKA_BROKER_SPARK_EXTERNAL: localhost:9092
-      KAFKA_TOPIC_SPARK: spark
+      KAFKA_BROKER_SPARK: kafka:29092
+      KAFKA_TOPIC_SPARK_RESPONSES: sparkResponses
+      KAFKA_TOPIC_SPARK_SURVEYS: sparkSurveys
 
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     ports:
@@ -28,7 +29,8 @@ services:
   # spark
 
   spark-master:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.1
+    command: bin/spark-class org.apache.spark.deploy.master.Master
     restart: always
     environment:
       - SPARK_MODE=master
@@ -39,7 +41,8 @@ services:
       - web
 
   spark-worker-a:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.1
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     restart: always
     environment:
       - SPARK_MODE=worker
@@ -52,7 +55,8 @@ services:
       - spark-master
 
   spark-worker-b:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.1
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     restart: always
     environment:
       - SPARK_MODE=worker

@@ -16,7 +16,7 @@ ENV KAFKA_BROKER='kafka:29092'
 
 ENV KAFKA_SPARK_BROKER='kafka-spark:29093'
 
-ENV KAFKA_TOPIC_SPARK='spark'
+ENV KAFKA_TOPIC_SPARK_RESPONSES='sparkResponses'
 
 # Set the working directory
 WORKDIR /opt/app

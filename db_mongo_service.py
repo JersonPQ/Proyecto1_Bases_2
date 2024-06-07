@@ -3,7 +3,7 @@ from kafka_service_for_spark import KafkaProducerSparkService
 import os
 
 KAFKA_BROKER_SPARK = os.getenv("KAFKA_BROKER")
-KAFKA_TOPIC_SPARK = os.getenv("KAFKA_TOPIC_SPARK")
+KAFKA_TOPIC_SPARK = os.getenv("KAFKA_TOPIC_SPARK_RESPONSES")
 
 class MongoDatabaseService:
     def __init__(self, database: MongoDB) -> None:
