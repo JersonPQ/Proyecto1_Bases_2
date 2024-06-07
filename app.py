@@ -1,3 +1,4 @@
+import json
 import os
 
 from flask import Flask, request, make_response, jsonify
@@ -686,8 +687,10 @@ def submit_changes(id):
             hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
             if not hasAccess[0]:
                 return jsonify({"message" : "You don't have permission"})
-    id_to_search = id
-    return kafka_service.submit_changes(id_to_search)
+    id_to_search = id    
+    cambios = json.dumps(request.get_json())
+    autor = request.cookies.get("token")
+    return kafka_service.submit_changes(id_to_search, cambios, autor)
 
 #Consulta el estado de los cambios
 @app.route('/surveys/<string:id>/edit/status', methods = ['GET'])

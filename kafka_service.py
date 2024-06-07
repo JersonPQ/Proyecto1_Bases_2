@@ -1,3 +1,4 @@
+import json
 from kafka import KafkaProducer, KafkaConsumer
 import threading
 from db_mongo_service import MongoDatabaseService
@@ -8,13 +9,15 @@ class KafkaService:
         self.kafka_broker = kafka_broker
         self.topics = []
     
-    def enviar_mensaje(self, topic: str, autor: str, mensaje: str) -> None:
+    def enviar_mensaje(self, topic: str, autor: str, mensaje: str):
         producer = KafkaProducer(bootstrap_servers=[self.kafka_broker])
         producer.send(topic, mensaje.encode('utf-8'))
         producer.flush()
-
+    
         # guardar mensaje en base de datos
         self.database.guardar_mensaje_kafka(topic, autor, mensaje)
+        
+        return "Mensaje enviado exitosamente"
 
     def escuchar_mensajes(self, topic: str) -> KafkaConsumer:
         consumer = KafkaConsumer(topic, bootstrap_servers=[self.kafka_broker])
