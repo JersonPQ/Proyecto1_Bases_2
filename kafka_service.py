@@ -9,7 +9,7 @@ class KafkaService:
         self.kafka_broker = kafka_broker
         self.topics = []
     
-    def enviar_mensaje(self, topic: str, autor: str, mensaje: str):
+    def enviar_mensaje(self, topic: str, autor: str, mensaje: str) -> None: 
         producer = KafkaProducer(bootstrap_servers=[self.kafka_broker])
         producer.send(topic, mensaje.encode('utf-8'))
         producer.flush()
@@ -17,8 +17,6 @@ class KafkaService:
         # guardar mensaje en base de datos
         self.database.guardar_mensaje_kafka(topic, autor, mensaje)
         
-        return "Mensaje enviado exitosamente"
-
     def escuchar_mensajes(self, topic: str) -> KafkaConsumer:
         consumer = KafkaConsumer(topic, bootstrap_servers=[self.kafka_broker])
         self.topics.append(topic)
@@ -48,9 +46,12 @@ class KafkaService:
         return topic
     
 #enviar cambios al sistema
-    def submit_changes(self, survey_id: str, cambios: dict, autor: str):
+    def submit_changes(self, survey_id: str, cambios: dict, autor: str) -> None:
         topic = f"survey_{survey_id}_edit"
-        self.enviar_mensaje(topic, autor, cambios)
+        cambios_json = json.dumps(cambios)
+        #Guardar cambios en la base de datos
+        self.database.actualizar_encuesta(survey_id, cambios)
+        self.enviar_mensaje(topic, autor, cambios_json)
 
 #Consulta el estado de los cambios
     def get_status(self, survey_id: str):

@@ -171,6 +171,12 @@ class MongoDB:
         return self.kafka_collection.insert_one(mensaje_kafka)
     
     #Listar todos los mensajes de Kafka por canal
-    def listar_mensajes_kafka(self, topic: str) -> list:
+    from typing import List, Dict, Any
+    
+    def listar_mensajes_kafka(self, topic: str) -> List[Dict[str, Any]]:
         mensajes = self.kafka_collection.find({"topic": topic}).sort("timestamp", -1)
-        return list(mensajes)
+        return [self._serialize_mensaje(mensaje) for mensaje in mensajes]
+    def _serialize_mensaje(self, mensaje):
+        if '_id' in mensaje:
+            mensaje['_id'] = str(mensaje['_id'])
+        return mensaje 

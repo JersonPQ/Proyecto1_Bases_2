@@ -675,35 +675,44 @@ def start_session(id):
     return kafka_service.start_session(id_to_search)
 
 #Envia cambios al sistema
-@app.route('/surveys/<string:id>/edit/submit', methods = ['POST'])
-def submit_changes(id):
+@app.route('/surveys/<string:id>/edit/submit', methods = ['POST']) 
+def submit_changes_app(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
     if not hasAccess[0]:
         survey = mongo_db_service.detalles_encuesta(id) 
         if 'token' not in survey:
-            return survey
+            return jsonify(survey), 403
         else:
             hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
             if not hasAccess[0]:
-                return jsonify({"message" : "You don't have permission"})
+                return jsonify({"message" : "You don't have permission"}), 403
     id_to_search = id    
-    cambios = json.dumps(request.get_json())
+    cambios = request.get_json()
     autor = request.cookies.get("token")
-    return kafka_service.submit_changes(id_to_search, cambios, autor)
+    try:
+        kafka_service.submit_changes(id_to_search, cambios, autor)
+        return jsonify({"message" : "Cambios realizados"}), 200
+    except Exception as e:
+        return jsonify({"message" : f"Failed to submit changes: {str(e)}"}), 500
 
 #Consulta el estado de los cambios
 @app.route('/surveys/<string:id>/edit/status', methods = ['GET'])
-def get_status(id):
+def get_status_app(id):
     token = request.cookies.get("token")
     hasAccess = Security.verifyToken({"token" : token, "userType" : 1})
     if not hasAccess[0]:
         survey = mongo_db_service.detalles_encuesta(id) 
         if 'token' not in survey:
-            return survey
+            return jsonify(survey), 403
         else:
             hasAccess = Security.verifyToken({"token" : survey["token"], "tokenKey" : token})
             if not hasAccess[0]:
                 return jsonify({"message" : "You don't have permission"})
     id_to_search = id
-    return kafka_service.get_status(id_to_search)
+    try:
+        status = kafka_service.get_status(id_to_search)
+        return jsonify(status), 200
+    except Exception as e:
+        return jsonify({"message" : f"Failed to get status: {str(e)}"}), 500
+    
