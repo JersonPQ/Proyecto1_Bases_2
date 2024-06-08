@@ -2,7 +2,7 @@
 
 
 CREATE TABLE surveys (
-    id SERIAL PRIMARY KEY,
+    id VARCHAR(200) PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     descripcion TEXT,
     publicada BOOLEAN NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE surveys (
 
 CREATE TABLE responses (
     id SERIAL PRIMARY KEY,
-    survey_id INT REFERENCES surveys(id),
+    survey_id VARCHAR(200) REFERENCES surveys(id),
     user_id VARCHAR(50),
     respuestas JSONB,
     fecha_respuesta TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -19,20 +19,20 @@ CREATE TABLE responses (
 
 CREATE TABLE trends (
     id SERIAL PRIMARY KEY,
-    survey_id INT REFERENCES surveys(id),
+    survey_id VARCHAR(200) REFERENCES surveys(id),
     score FLOAT,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
  --DATOS DE PRUEBA PARA EL DASHBOARD, DEBEN DE VENIR DE SPARK LOS VERDAEROS.
-INSERT INTO surveys (titulo, descripcion, publicada)
+INSERT INTO surveys (id, titulo, descripcion, publicada)
 VALUES 
-('Encuesta de Satisfacción', 'Encuesta para medir la satisfacción del cliente', TRUE),
-('Encuesta de Preferencia de Producto', 'Esta encuesta mide la preferencia de un producto', TRUE),
-('Encuesta de Calidad del Servicio', 'Encuesta para evaluar la calidad del servicio', TRUE),
-('Encuesta de Uso de Redes Sociales', 'Encuesta sobre el uso de redes sociales', TRUE),
-('Encuesta de Hábitos Alimenticios', 'Encuesta para conocer los hábitos alimenticios', TRUE);
+('1', 'Encuesta de Satisfacción', 'Encuesta para medir la satisfacción del cliente', TRUE),
+('2', 'Encuesta de Preferencia de Producto', 'Esta encuesta mide la preferencia de un producto', TRUE),
+('3', 'Encuesta de Calidad del Servicio', 'Encuesta para evaluar la calidad del servicio', TRUE),
+('4', 'Encuesta de Uso de Redes Sociales', 'Encuesta sobre el uso de redes sociales', TRUE),
+('5', 'Encuesta de Hábitos Alimenticios', 'Encuesta para conocer los hábitos alimenticios', TRUE);
 
 
 INSERT INTO responses (survey_id, user_id, respuestas)
