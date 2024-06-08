@@ -23,6 +23,7 @@ services:
       KAFKA_BROKER: kafka:29092
 
       KAFKA_TOPIC_SPARK_RESPONSES: sparkResponses
+      KAFKA_TOPIC_SPARK_SURVEYS: sparkSurveys
 
     ports:
       - 5000:5000
@@ -34,9 +35,6 @@ services:
       - redis
       - zookeeper
       - kafka
-      - spark-master
-      - spark-worker-a
-      - spark-worker-b
       - superset
     volumes:
       - .:/opt/app
@@ -170,41 +168,6 @@ services:
       - 6379:6379
     networks:
       - web
-
-
-
-  spark-master:
-    image: bitnami/spark:latest
-    restart: always
-    environment:
-      - SPARK_MODE=master
-    ports:
-      - 8080:8080
-      - 7077:7077
-    networks:
-      - web
-
-  spark-worker-a:
-    image: bitnami/spark:latest
-    restart: always
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-    networks:
-      - web
-    depends_on:
-      - spark-master
-
-  spark-worker-b:
-    image: bitnami/spark:latest
-    restart: always
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-    networks:
-      - web
-    depends_on:
-      - spark-master
 
   superset:
     build:

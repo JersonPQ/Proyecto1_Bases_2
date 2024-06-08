@@ -3,18 +3,33 @@ from kafka_service_for_spark import KafkaProducerSparkService
 import os
 
 KAFKA_BROKER_SPARK = os.getenv("KAFKA_BROKER")
-KAFKA_TOPIC_SPARK = os.getenv("KAFKA_TOPIC_SPARK_RESPONSES")
+KAFKA_TOPIC_SPARK_RESPONSES = os.getenv("KAFKA_TOPIC_SPARK_RESPONSES")
+KAFKA_TOPIC_SPARK_SURVEYS = os.getenv("KAFKA_TOPIC_SPARK_SURVEYS")
 
 class MongoDatabaseService:
     def __init__(self, database: MongoDB) -> None:
         self.database = database
         # Servicio de Kafka para Spark
-        self.kafka_service_for_spark = KafkaProducerSparkService(kafka_broker=KAFKA_BROKER_SPARK, topic=KAFKA_TOPIC_SPARK)
-        self.topic_spark = KAFKA_TOPIC_SPARK
+        self.kafka_service_for_spark_responses = KafkaProducerSparkService(kafka_broker=KAFKA_BROKER_SPARK, topic=KAFKA_TOPIC_SPARK_RESPONSES)
+        self.kafka_service_for_spark_surveys = KafkaProducerSparkService(kafka_broker=KAFKA_BROKER_SPARK, topic=KAFKA_TOPIC_SPARK_SURVEYS)
+        self.topic_spark_responses = KAFKA_TOPIC_SPARK_RESPONSES
+        self.topic_spark_surveys = KAFKA_TOPIC_SPARK_SURVEYS
     
     # ----------------- Consultas Encuestas ----------------- #
     def crear_encuesta(self, encuesta: dict, token: int) -> dict:
-        return self.database.crear_encuesta(encuesta, token)
+        try:
+            database_response = self.database.crear_encuesta(encuesta, token)
+
+            # agregar id de la encuesta a las respuestas
+            encuesta["id_encuesta"] = str(database_response.inserted_id)
+            # Convertir el id de la encuesta a string para que sea serializable
+            encuesta['_id'] = str(encuesta['_id'])
+
+            # Enviar encuesta a Spark mediante Kafka
+            self.kafka_service_for_spark_surveys.enviar_mensaje(self.topic_spark_surveys, encuesta)
+            return encuesta
+        except Exception as e:
+            return {"error": str(e)}
     
     def listar_encuestas(self) -> list:
         return self.database.listar_encuestas()
@@ -49,7 +64,10 @@ class MongoDatabaseService:
         # Enviar respuestas a Spark
         try:
             return_database = self.database.enviar_respuestas(id, respuestas)
-            self.kafka_service_for_spark.enviar_mensaje(self.topic_spark, respuestas)
+
+            # agregar id de la encuesta a las respuestas
+            respuestas["id_encuesta"] = id
+            self.kafka_service_for_spark_responses.enviar_mensaje(self.topic_spark_responses, respuestas)
             return return_database
         except Exception as e:
             return {"error": str(e)}

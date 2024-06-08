@@ -14,9 +14,9 @@ ENV REDIS_DB_PORT=6379
 
 ENV KAFKA_BROKER='kafka:29092'
 
-ENV KAFKA_SPARK_BROKER='kafka-spark:29093'
-
 ENV KAFKA_TOPIC_SPARK_RESPONSES='sparkResponses'
+
+ENV KAFKA_TOPIC_SPARK_SURVEYS='sparkSurveys'
 
 # Set the working directory
 WORKDIR /opt/app

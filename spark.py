@@ -5,6 +5,8 @@ from pyspark.sql import Row
 import os
 import datetime as dt
 
+import json
+
 from kafka import KafkaConsumer, KafkaProducer
 
 # Variables de entorno
@@ -19,7 +21,8 @@ topic_surveys = KAFKA_TOPIC_SPARK_SURVEYS
 def convertir_a_dataframe_encuesta(coleccion_mongo: dict) -> dict:
         try:
                 df = spark.createDataFrame([
-                        Row(titulo=coleccion_mongo["titulo"],
+                        Row(id=coleccion_mongo["id_encuesta"],
+                            titulo=coleccion_mongo["titulo"],
                             descripcion=coleccion_mongo["descripcion"],
                             publicada=coleccion_mongo["publicada"],
                             fecha_creacion=dt.datetime.now())
@@ -31,8 +34,9 @@ def convertir_a_dataframe_encuesta(coleccion_mongo: dict) -> dict:
 def convertir_a_dataframe_respuesta(coleccion_mongo: dict) -> None:
         try:
                 df = spark.createDataFrame([
-                        Row(user_id=coleccion_mongo["user_id"],
-                            respuestas=coleccion_mongo["respuestas"],
+                        Row(survey_id=coleccion_mongo["id_encuesta"],
+                            user_id=coleccion_mongo["user_id"],
+                            respuestas=json.dumps(coleccion_mongo["respuestas"]),
                             publicada=coleccion_mongo["publicada"],
                             fecha_respuesta=dt.datetime.now())
                 ])
@@ -70,14 +74,11 @@ def guardar_respuesta_en_postgre(dataframe: dict) -> dict:
         except Exception as e:
                 return {"error": str(e)}
 
-# Inicializar el servicio de Spark
-findspark.init()
-
 try:
         # Inicializar Spark
         spark = SparkSession.builder\
-                .master("spark://spark-master:7077")\
                 .appName("Encuesta_Spark")\
+                .master("spark://spark-master:7077")\
                 .config("spark.jars", "/opt/app/jars/postgresql-42.7.3.jar")\
                 .getOrCreate()
                 # .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.1")\

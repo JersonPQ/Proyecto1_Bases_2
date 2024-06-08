@@ -19,8 +19,6 @@ services:
       - web
     depends_on:
       - spark-master
-      - spark-worker-a
-      - spark-worker-b
     volumes:
       - .:/opt/app
     
@@ -30,39 +28,21 @@ services:
 
   spark-master:
     image: bitnami/spark:3.5.1
-    command: bin/spark-class org.apache.spark.deploy.master.Master
     restart: always
     environment:
       - SPARK_MODE=master
     ports:
-      - 8080:8080
       - 7077:7077
+      - 8080:8080
     networks:
       - web
 
   spark-worker-a:
     image: bitnami/spark:3.5.1
-    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     restart: always
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2G
-    networks:
-      - web
-    depends_on:
-      - spark-master
-
-  spark-worker-b:
-    image: bitnami/spark:3.5.1
-    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
-    restart: always
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2G
     networks:
       - web
     depends_on:
