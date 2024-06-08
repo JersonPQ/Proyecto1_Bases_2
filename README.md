@@ -497,5 +497,17 @@ Se va a explicar la funcionabilidad de cada endpoint, argumentos y restricciones
     ```
     [GET] http://127.0.0.1:5000/surveys/dfvsdcsdcs475SvEvfdv4/analysis
     ``` 
+#### Endpoint para visualización del Dashboard
+1. **[GET] /dashboard-url***
+
+    Retorna la dirección en el localhost donde se puede visualizar el Dashboard. Este se actualizada cada 10 segundos con la nueva información en la base de datos postgre.
+
+    * Ejemplo de petición
+    ```
+    [GET] http://127.0.0.1:5000/dashboard-url
+    ```
+
 
 ### 3. Pruebas
+
+### 

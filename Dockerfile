@@ -14,6 +14,10 @@ ENV REDIS_DB_PORT=6379
 
 ENV KAFKA_BROKER='kafka:29092'
 
+ENV KAFKA_SPARK_BROKER='kafka-spark:29093'
+
+ENV KAFKA_TOPIC_SPARK_RESPONSES='sparkResponses'
+
 # Set the working directory
 WORKDIR /opt/app
 
@@ -23,13 +27,6 @@ COPY . .
 RUN pip install poetry
 # Install dependencies
 RUN poetry install
-
-
-# Instalar Java 17
-
-RUN apt-get update && apt-get install -y openjdk-17-jre
-
-ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-amd64'
 
 # Create a volume
 VOLUME /data_store

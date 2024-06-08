@@ -1,7 +1,7 @@
 import json
 import os
 
-from flask import Flask, request, make_response, jsonify
+from flask import Flask, request, make_response, jsonify, redirect
 from Security import Security
 
 from db_postgre import PostgreDatabase
@@ -16,9 +16,6 @@ from db_redis_service import RedisDBService
 from bson import json_util
 
 from kafka_service import KafkaService
-
-import findspark
-from pyspark.sql import SparkSession
 
 POSTGRES_DB_HOST = os.getenv('POSTGRES_DB_HOST')
 POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
@@ -56,9 +53,6 @@ redis_db_service = RedisDBService(redis_databse=redis_db)
 # Servicio de Kafka
 kafka_service = KafkaService(database=mongo_db_service, kafka_broker=KAFKA_BROKER)
 
-# Inicializar el servicio de Spark
-findspark.init()
-spark = SparkSession.builder.master("spark://spark-master:7077").getOrCreate()
 
 @app.route('/')
 def home():
@@ -716,3 +710,11 @@ def get_status_app(id):
     except Exception as e:
         return jsonify({"message" : f"Failed to get status: {str(e)}"}), 500
     
+#Endpoint para el Dashboard 
+@app.route('/dashboard-url')
+def dashboard_url():
+    dashboard_url = 'http://localhost:8088/superset/dashboard/p/w41lv7en7Xp/'
+    return jsonify({'dashboard_url': dashboard_url})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
