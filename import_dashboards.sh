@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Esperar a que Superset esté listo
-until curl -sSf http://superset:8088/api/v1/ping; do
-  echo "Esperando a que Superset esté listo..."
+# Wait for Superset to be ready
+until curl -sSf http://localhost:8088/api/v1/ping; do
+  echo "Waiting for Superset to be ready..."
   sleep 10
 done
 
-# Importar el dashboard
+# Import the dashboard
 curl -X POST \
   -F 'file=@/app/superset_exports/dashboard.zip' \
-  "http://superset:8088/api/v1/dashboard/import/"
+  "http://localhost:8088/api/v1/dashboard/import/"

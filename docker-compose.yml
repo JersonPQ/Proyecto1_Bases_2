@@ -35,13 +35,11 @@ services:
       - redis
       - zookeeper
       - kafka
-      - superset
     volumes:
       - .:/opt/app
     command: poetry run python3 -m flask --app app.py --debug run --host=0.0.0.0
 
 # kafka
-
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -169,6 +167,7 @@ services:
     networks:
       - web
 
+
   superset:
     build:
       context: .
@@ -184,15 +183,10 @@ services:
       - web
     depends_on:
       - postgredb
-    volumes:
-      - superset_home:/app/superset_home  # Persist data
-      - superset_config:/app/superset_config  # Persist config
-    entrypoint: ["/bin/bash", "-c", "/docker-init.sh && /app/import_dashboards.sh && /app/docker-init.sh"]
 # Neo4J
   neo4j:
     image: neo4j:4.4-community
     hostname: server1
-
     networks:
       - web
     ports:

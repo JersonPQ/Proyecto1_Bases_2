@@ -5,8 +5,10 @@ ENV SUPERSET_LOAD_EXAMPLES=no
 ENV SUPERSET_SECRET_KEY=thisISaSECRET_1234
 ENV SQLALCHEMY_DATABASE_URI=postgresql://postgres:postgres@postgredb:5432/encuesta
 
-# Copy initialization script
-COPY docker-init.sh /docker-init.sh
+# Run initialization directly in the Dockerfile
+RUN /bin/bash -c "\
+    superset db upgrade && \
+    superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password admin || true && \
+    superset init"
 
-# Run initialization script on container start
-ENTRYPOINT ["/bin/bash", "/docker-init.sh"]
+ENTRYPOINT ["superset", "run", "-h", "0.0.0.0", "-p", "8088", "--with-threads", "--reload", "--debugger"]

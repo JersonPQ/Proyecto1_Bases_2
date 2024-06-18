@@ -1,3 +1,4 @@
+# docker-init.sh
 #!/bin/bash
 set -e
 
@@ -9,6 +10,3 @@ superset fab create-admin --username admin --firstname Admin --lastname User --e
 
 # Initialize Superset
 superset init
-
-# Start the Superset server
-superset run -h 0.0.0.0 -p 8088 --with-threads --reload --debugger
