@@ -1,6 +1,5 @@
 \c encuesta;
 
-
 CREATE TABLE surveys (
     id SERIAL PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
