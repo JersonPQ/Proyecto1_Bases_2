@@ -122,19 +122,16 @@ services:
 
 # Neo4J
   neo4j:
-    image: neo4j:4.4.4-community
-    ports:
-      - 7888:7474
-      - 7999:7687
-    restart: always
-    environment:
-      - NEO4J_AUTH=neo4j/Kzds1234
-    volumes:
-      - ./db/data:/data
-      - ./db/conf:/conf
-      - ./db/logs:/logs
-      - ./db/plugins:/plugins
+    image: neo4j:4.4-community
+    hostname: server1
 
+    networks:
+      - web
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_AUTH=neo4j/password
 
 networks:
   web:

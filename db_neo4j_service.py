@@ -7,3 +7,15 @@ class Neo4jDataBaseService:
     #------------------Inserciones------------------------
     def insertUser(self, user):
         return self.database.insertUser(user)
+    
+    def insertSurvey(self, survey, idSurvey):
+        return self.database.insertSurvey(survey, idSurvey)
+    
+    def insertInsertManyQuestion(self, questions, idSurvey):
+        return self.database.insertManyQuestions(questions, idSurvey)
+    
+    def insertQuestion(self, question, idSurvey):
+        return self.database.insertQuestion(question, idSurvey)
+    
+    def inserAnswer(self, answer, surverId, userId):
+        return self.database.insertAnswer(answer, surverId, userId)
