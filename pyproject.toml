@@ -19,6 +19,7 @@ kafka-python = "^2.0.2"
 six = "^1.16.0"
 findspark = "^2.0.1"
 pyspark = "^3.5.1"
+neo4j = "^5.20.0"
 
 
 [build-system]

@@ -17,6 +17,9 @@ from bson import json_util
 
 from kafka_service import KafkaService
 
+from db_neo4j import Neo4jDataBase
+from db_neo4j_service import Neo4jDataBaseService
+
 POSTGRES_DB_HOST = os.getenv('POSTGRES_DB_HOST')
 POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
 POSTGRES_DB_USER = os.getenv('POSTGRES_DB_USER')
@@ -29,9 +32,14 @@ MONGO_DB_USER = os.getenv('MONGO_DB_USER', 'default_user')
 MONGO_DB_PASSWORD = os.getenv('MONGO_DB_PASSWORD', 'default_password')
 
 REDIS_DB_HOST = os.getenv('REDIS_DB_HOST')
-REDIS_DB_PORT = int(os.getenv('REDIS_DB_PORT'))
+REDIS_DB_PORT = os.getenv('REDIS_DB_PORT')
 
 KAFKA_BROKER = os.getenv('KAFKA_BROKER')
+
+NEO4J_USER = os.getenv('NEO4J_USER')
+NEO4J_PASSWORD = os.getenv('NEO4J_PASSWORD')
+NEO4J_PORT = os.getenv('NEO4J_PORT')
+
 
 # Conexion a las bases de datos
 postgre_db = PostgreDatabase(database=POSTGRES_DB_NAME, host=POSTGRES_DB_HOST,
@@ -42,6 +50,8 @@ mongo_db = MongoDB(host=MONGO_DB_HOST, port=MONGO_DB_PORT, usernamen=MONGO_DB_US
 
 redis_db = RedisDB(host=REDIS_DB_HOST, port=REDIS_DB_PORT)
 
+neo4j_db = Neo4jDataBase(user=NEO4J_USER, password=NEO4J_PASSWORD, port=NEO4J_PORT)
+
 # Creación de la aplicación
 app = Flask(__name__)
 
@@ -49,6 +59,7 @@ app = Flask(__name__)
 postgre_db_service = PostgreDatabaseService(database=postgre_db)
 mongo_db_service = MongoDatabaseService(database=mongo_db)
 redis_db_service = RedisDBService(redis_databse=redis_db)
+neo4j_db_service = Neo4jDataBaseService(database=neo4j_db)
 
 # Servicio de Kafka
 kafka_service = KafkaService(database=mongo_db_service, kafka_broker=KAFKA_BROKER)
@@ -67,6 +78,8 @@ def register():
         return jsonify({'message' : 'Faltan datos para realizar esta consulta.'})
     data = postgre_db_service.insertUser(user)
 
+    #Insertar datos a Neo4j
+    data = neo4j_db_service.insertUser(user)
     # eliminar el cache de redis de users
     redis_db_service.delete_key("users")
 
@@ -193,6 +206,7 @@ def deleteUser(id):
 
 #Enpoints para Encuestas [Anthony]
 #Autenticacion
+###Hay que poner lo de Neo4j
 @app.route('/surveys', methods = ['POST'])
 def post_encuesta():
     encuesta= request.get_json()
@@ -206,10 +220,14 @@ def post_encuesta():
     tokenUser = request.cookies.get("token")
     token = Security.generateTokenSurvey(tokenUser)
     resultado= mongo_db_service.crear_encuesta(encuesta,token)
+
     if resultado.acknowledged:
         # eliminar el cache de redis de surveys
         redis_db_service.delete_key("surveys")
 
+            #Insertar a Neo4j
+        insertNeo4j = neo4j_db_service.insertSurvey(encuesta, str(resultado.inserted_id))
+        print(resultado)
         return jsonify({"message": "Encuesta creada exitosamente", "id": str(resultado.inserted_id)}), 201
     else:
         return jsonify({"message": "Error al crear la encuesta"}), 400
@@ -336,6 +354,7 @@ def publish_survey(id):
     return mongo_db_service.publicar_encuesta(id_to_search)
 
 #Endpoints para las Preguntas de las Encuestas [Anthony]
+#Insertar Neo4j
 @app.route('/surveys/<string:id>/questions', methods = ['POST'])
 def post_question(id):
     token = request.cookies.get("token")
@@ -459,6 +478,7 @@ def delete_question(id, question_id):
     return mongo_db_service.eliminar_pregunta(encuesta, id_pregunta)
 
 #Endpoints para las Respuestas de las Encuestas [Anthony]
+#Insertar Neo4j
 @app.route('/surveys/<string:id>/responses', methods = ['POST'])
 def post_response(id):
     encuesta= id
@@ -467,6 +487,8 @@ def post_response(id):
     # eliminar el cache de redis de responses_encuesta con el id
     redis_db_service.delete_key(f"responses_encuesta_{id}")
 
+    #Insertar la respuesta en neo4j
+    insertedAnswerNeo4j = neo4j_db_service.inserAnswer()
     return mongo_db_service.enviar_respuestas(encuesta, respuestas)
 
 
@@ -518,7 +540,6 @@ def register_respondent():
     respondent_data = request.get_json()
     if not respondent_data or 'name' not in respondent_data or 'email' not in respondent_data:
         return jsonify({'error': 'Missing name or email'}), 400
-    
     try:
         result = postgre_db_service.insert_respondent(respondent_data)
         # eliminar el cache de redis de respondents
@@ -529,7 +550,8 @@ def register_respondent():
         return jsonify({'error': str(e)}), 500
 
 
-#GET /respondents - Obtiene todos los encuestados
+#GET /respondents - Obtie
+# ne todos los encuestados
 @app.route('/respondents', methods=['GET'])
 #@token_required
 def list_respondents():

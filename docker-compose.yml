@@ -188,6 +188,18 @@ services:
       - superset_home:/app/superset_home  # Persist data
       - superset_config:/app/superset_config  # Persist config
     entrypoint: ["/bin/bash", "-c", "/docker-init.sh && /app/import_dashboards.sh && /app/docker-init.sh"]
+# Neo4J
+  neo4j:
+    image: neo4j:4.4-community
+    hostname: server1
+
+    networks:
+      - web
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_AUTH=neo4j/password
 
 networks:
   web:

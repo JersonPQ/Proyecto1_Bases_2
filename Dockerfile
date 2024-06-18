@@ -17,6 +17,9 @@ ENV KAFKA_BROKER='kafka:29092'
 ENV KAFKA_TOPIC_SPARK_RESPONSES='sparkResponses'
 
 ENV KAFKA_TOPIC_SPARK_SURVEYS='sparkSurveys'
+ENV NEO4J_USER='neo4j'
+ENV NEO4J_PASSWORD='password'
+ENV NEO4J_PORT=7687
 
 # Set the working directory
 WORKDIR /opt/app

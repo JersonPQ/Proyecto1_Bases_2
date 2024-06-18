@@ -52,6 +52,7 @@ class PostgreDatabase:
         cursor.execute(query, (user['name'], user['password'], user['userRol']))
         self.conn.commit()
 
+
         cursor.close()
 
         return user
@@ -98,7 +99,6 @@ class PostgreDatabase:
         cursor.close()
         return deleted_rows > 0
 # ------------------ MÉTODOS ENCUESTADOS --------------
-
 
     #Insertar encuestado
     def insert_respondent(self, respondent_data):
