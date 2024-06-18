@@ -1,12 +1,11 @@
 FROM apache/superset
 
-# Environment variables
 ENV SUPERSET_LOAD_EXAMPLES=no
 ENV SUPERSET_SECRET_KEY=thisISaSECRET_1234
 ENV SQLALCHEMY_DATABASE_URI=postgresql://postgres:postgres@postgredb:5432/encuesta
 
-# Copy initialization script
-COPY docker-init.sh /docker-init.sh
+# Copiar el script de inicialización y el dashboard exportado
+COPY docker-init.sh /tmp/docker-init.sh
+COPY superset-exports/dashboard.zip /tmp/dashboard.zip
 
-# Run initialization script on container start
 ENTRYPOINT ["/bin/bash", "/docker-init.sh"]

@@ -150,7 +150,7 @@ services:
       dockerfile: Dockerfile.superset
     restart: always
     ports:
-      - 8088:8088
+      - 8090:8090
     environment:
       SUPERSET_LOAD_EXAMPLES: 'no'
       SUPERSET_SECRET_KEY: 'thisISaSECRET_1234'
