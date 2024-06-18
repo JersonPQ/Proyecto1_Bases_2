@@ -3,8 +3,8 @@ import os
 import unittest
 from flask import Flask, jsonify, request, make_response
 from db_postgre_service import PostgreDatabaseService
-from db_mongo_service import MongoDatabaseService
-from db_mongo_service import MongoDatabaseService
+from db_mongo_service_test import MongoDatabaseService
+from db_mongo_service_test import MongoDatabaseService
 import os
 from Security import Security
 from pymongo import MongoClient

@@ -221,14 +221,14 @@ def post_encuesta():
     token = Security.generateTokenSurvey(tokenUser)
     resultado= mongo_db_service.crear_encuesta(encuesta,token)
 
-    if resultado.acknowledged:
+    if resultado is not None:
         # eliminar el cache de redis de surveys
         redis_db_service.delete_key("surveys")
 
             #Insertar a Neo4j
-        insertNeo4j = neo4j_db_service.insertSurvey(encuesta, str(resultado.inserted_id))
+        insertNeo4j = neo4j_db_service.insertSurvey(encuesta, str(resultado['_id']))
         print(resultado)
-        return jsonify({"message": "Encuesta creada exitosamente", "id": str(resultado.inserted_id)}), 201
+        return jsonify({"message": "Encuesta creada exitosamente", "id": str(resultado['_id'])}), 201
     else:
         return jsonify({"message": "Error al crear la encuesta"}), 400
 

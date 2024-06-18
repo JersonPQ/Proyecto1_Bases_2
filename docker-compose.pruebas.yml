@@ -6,7 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile.test
     ports:
-      - 5001:5001
+      - 5003:5003
+    
 
     command: poetry run python3 pruebas.py
   
